@@ -15,6 +15,7 @@ export async function loginController(req: Request, res: Response) {
     if (error instanceof AppError) {
       return res.status(error.status).json({ message: error.message, ...(error.code ? { code: error.code } : {}) });
     }
-    return res.status(401).json({ message: (error as Error).message });
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Terjadi kesalahan internal server." });
   }
 }
