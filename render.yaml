@@ -1,14 +1,15 @@
 services:
   - type: web
     name: sipa-backend
-    env: node
+    env: docker
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
     envVars:
       - key: NODE_VERSION
         value: 18.17.0
       - key: DATABASE_TYPE
-        value: firestore
+        value: json
       - key: PORT
-        value: 10000
+        value: 4000
+
