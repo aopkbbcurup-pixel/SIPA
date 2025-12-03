@@ -14,6 +14,7 @@ import {
   verifyLegalDocument,
   uploadReportAttachments,
   saveSignature,
+  deleteSignature,
 } from "../lib/reportApi";
 import { buildGoogleMapsEmbedUrl, buildGoogleMapsLink, buildStaticMapUrl } from "../lib/maps";
 import { responseLabel } from "../utils/inspectionChecklist";
@@ -1781,7 +1782,7 @@ export function ReportDetailPage() {
               <div className="flex flex-col items-center rounded-lg border border-slate-200 p-6 text-center">
                 <p className="mb-4 text-sm font-medium text-slate-500">Penilai Internal</p>
                 {report.signatures?.appraiser ? (
-                  <div className="mb-2">
+                  <div className="mb-2 flex flex-col items-center">
                     <img
                       src={report.signatures.appraiser.imageDataUrl}
                       alt="Tanda Tangan Penilai"
@@ -1793,6 +1794,24 @@ export function ReportDetailPage() {
                     <p className="text-xs text-slate-500">
                       {formatDate(report.signatures.appraiser.signedAt, true)}
                     </p>
+                    {authUser?.role === "appraiser" && report.assignedAppraiserId === authUser.id && (
+                      <button
+                        onClick={async () => {
+                          if (confirm("Apakah Anda yakin ingin menghapus tanda tangan ini?")) {
+                            try {
+                              await deleteSignature(report.id, "appraiser");
+                              fetchReportData();
+                            } catch (error) {
+                              console.error("Failed to delete signature", error);
+                              alert("Gagal menghapus tanda tangan.");
+                            }
+                          }
+                        }}
+                        className="mt-2 text-xs text-red-600 hover:text-red-800 hover:underline"
+                      >
+                        Hapus
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="mb-4 flex h-24 w-full items-center justify-center rounded bg-slate-50 text-xs text-slate-400">
@@ -1818,7 +1837,7 @@ export function ReportDetailPage() {
               <div className="flex flex-col items-center rounded-lg border border-slate-200 p-6 text-center">
                 <p className="mb-4 text-sm font-medium text-slate-500">Supervisor</p>
                 {report.signatures?.supervisor ? (
-                  <div className="mb-2">
+                  <div className="mb-2 flex flex-col items-center">
                     <img
                       src={report.signatures.supervisor.imageDataUrl}
                       alt="Tanda Tangan Supervisor"
@@ -1830,6 +1849,24 @@ export function ReportDetailPage() {
                     <p className="text-xs text-slate-500">
                       {formatDate(report.signatures.supervisor.signedAt, true)}
                     </p>
+                    {(authUser?.role === "supervisor" || authUser?.role === "admin") && (
+                      <button
+                        onClick={async () => {
+                          if (confirm("Apakah Anda yakin ingin menghapus tanda tangan ini?")) {
+                            try {
+                              await deleteSignature(report.id, "supervisor");
+                              fetchReportData();
+                            } catch (error) {
+                              console.error("Failed to delete signature", error);
+                              alert("Gagal menghapus tanda tangan.");
+                            }
+                          }
+                        }}
+                        className="mt-2 text-xs text-red-600 hover:text-red-800 hover:underline"
+                      >
+                        Hapus
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="mb-4 flex h-24 w-full items-center justify-center rounded bg-slate-50 text-xs text-slate-400">

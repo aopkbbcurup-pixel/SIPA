@@ -188,3 +188,8 @@ export async function saveSignature(reportId: string, role: "appraiser" | "super
   const { data } = await api.post<{ success: true }>(`/reports/${reportId}/sign`, { role, imageDataUrl });
   return data;
 }
+
+export async function deleteSignature(reportId: string, role: "appraiser" | "supervisor") {
+  const { data } = await api.delete<{ success: true }>(`/reports/${reportId}/sign`, { data: { role } });
+  return data;
+}

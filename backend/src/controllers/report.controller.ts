@@ -422,3 +422,36 @@ export async function saveSignatureController(req: AuthenticatedRequest, res: Re
     return respondWithError(res, error, 400);
   }
 }
+
+export async function deleteSignatureController(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { id } = req.params as { id: string };
+    const { role } = req.body as { role: "appraiser" | "supervisor" };
+    const actor = req.user!;
+
+    let report;
+    try {
+      report = await reportService.getReport(id);
+    } catch (error) {
+      return respondWithError(res, error, 404);
+    }
+
+    // Permission check
+    if (role === "appraiser") {
+      if (report.assignedAppraiserId !== actor.id) {
+        return res.status(403).json({ message: unauthorizedMessage });
+      }
+    } else if (role === "supervisor") {
+      if (actor.role !== "supervisor" && actor.role !== "admin") {
+        return res.status(403).json({ message: unauthorizedMessage });
+      }
+    } else {
+      return res.status(400).json({ message: "Role tidak valid untuk penghapusan tanda tangan." });
+    }
+
+    await reportService.deleteSignature(id, role);
+    return res.json({ success: true });
+  } catch (error) {
+    return respondWithError(res, error, 400);
+  }
+}

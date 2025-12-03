@@ -14,6 +14,7 @@ import {
   updateLegalVerificationController,
   exportReportsController,
   saveSignatureController,
+  deleteSignatureController,
 } from "../controllers/report.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { validateBody, validateQuery } from "../middleware/validate.middleware";
@@ -46,5 +47,6 @@ router.delete("/:id/attachments/:attachmentId", authenticate(), deleteAttachment
 router.get("/:id/preview", authenticate(), previewReportController);
 router.get("/:id/pdf", authenticate(), generatePdfController);
 router.post("/:id/sign", authenticate(), saveSignatureController);
+router.delete("/:id/sign", authenticate(), deleteSignatureController);
 
 export default router;
