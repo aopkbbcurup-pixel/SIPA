@@ -1,12 +1,12 @@
-ï»¿# SIPA (Sistem Penilaian Agunan)
+# SIPA (Sistem Penilaian Agunan)
 
 Aplikasi full-stack untuk mendigitalkan proses penilaian agunan properti. Solusi ini menggantikan alur manual berbasis dokumen Word dengan antarmuka web modern, API Node.js, penyimpanan JSON ringan, serta dukungan lampiran dan penyusunan laporan ke PDF.
 
 ## Struktur Proyek
 
-- `backend/` â€“ REST API Express + TypeScript dengan penyimpanan file JSON, autentikasi JWT, unggah lampiran, dan generasi PDF (Puppeteer).
-- `frontend/` â€“ Aplikasi React + Vite + Tailwind dengan wizard input multi-langkah, manajemen laporan, dan dashboard ringkasan.
-- `storage/` â€“ Lokasi database JSON yang dibuat otomatis saat server dijalankan.
+- `backend/` – REST API Express + TypeScript dengan penyimpanan file JSON, autentikasi JWT, unggah lampiran, dan generasi PDF (Puppeteer).
+- `frontend/` – Aplikasi React + Vite + Tailwind dengan wizard input multi-langkah, manajemen laporan, dan dashboard ringkasan.
+- `storage/` – Lokasi database JSON yang dibuat otomatis saat server dijalankan.
 
 ## Persyaratan
 
@@ -29,6 +29,7 @@ Environment variables (lihat `.env.example`):
 - `JWT_SECRET` - Rahasia token JWT
 - `UPLOAD_DIR` - Folder penyimpanan lampiran (default `uploads`)
 - `PDF_OUTPUT_DIR` - Folder output PDF (default `generated-pdfs`)
+- `GOOGLE_MAPS_API_KEY` - Opsional, isi bila ingin menampilkan snapshot Google Maps statis pada detail laporan (digunakan juga oleh paket desktop).
 
 Endpoint utama tersedia di `http://localhost:4000/api`. Seeding default menyediakan tiga akun:
 
@@ -46,7 +47,15 @@ npm install
 npm run dev
 ```
 
-Salin `.env.example` menjadi `.env` bila perlu mengubah URL API (`VITE_API_URL`). Aplikasi default akan mengarah ke `http://localhost:4000/api`.
+Salin `.env.example` menjadi `.env` bila perlu mengubah URL API (`VITE_API_URL`). Aplikasi default akan mengarah ke `http://localhost:4000/api`. Gunakan `VITE_PUBLIC_API_URL` bila frontend harus memanggil domain berbeda (reverse proxy) dan `VITE_GOOGLE_MAPS_API_KEY` bila ingin mengambil snapshot peta langsung dari browser saat backend tidak menyuntikkan konfigurasi ini.
+
+### Urutan sumber konfigurasi
+
+1. **Desktop Settings ? Server** - Nilai disimpan di `sipa-config.json` Electron dan langsung disuntikkan saat runtime (tidak perlu rebuild).
+2. **Backend `.env`** – Saat API menyajikan frontend statis (`SIPA_SERVE_FRONTEND=true`), variabel seperti `SIPA_PUBLIC_API_BASE_URL` dan `GOOGLE_MAPS_API_KEY` otomatis dikirim ke klien.
+3. **Frontend `.env`** – Dipakai saat menjalankan Vite dev server / build statis mandiri (`VITE_API_URL`, `VITE_PUBLIC_API_URL`, `VITE_GOOGLE_MAPS_API_KEY`).
+
+Jika layer dengan prioritas lebih tinggi tidak menyediakan nilai tertentu, frontend akan turun ke layer berikutnya atau fallback `http://localhost:4000/api`.
 
 Jika ingin mengakses Vite dev server dari perangkat lain (misal mobile di Wi-Fi yang sama), buka URL `http://192.168.0.110:5173`. Pastikan `VITE_API_URL` pada `.env` diarahkan ke `http://192.168.0.110:4000/api`.
 
@@ -72,14 +81,18 @@ Skrip ini akan membuka dua jendela terminal (backend & frontend). Tekan ENTER di
 ## Skrip Penting
 
 ### Backend
-- `npm run dev` â€“ Menjalankan API dengan ts-node-dev.
-- `npm run build` â€“ Compile TypeScript ke `dist/`.
-- `npm run start` â€“ Menjalankan hasil build.
+- `npm run dev` – Menjalankan API dengan ts-node-dev.
+- `npm run build` – Compile TypeScript ke `dist/`.
+- `npm run start` – Menjalankan hasil build.
 
 ### Frontend
-- `npm run dev` â€“ Menjalankan Vite dev server.
+- `npm run dev` - Menjalankan Vite dev server.
 - `npm run build` - Build produksi.
 - `npm run preview` - Melihat build produksi secara lokal.
+
+### Desktop
+- `npm --prefix desktop run dev` - Menjalankan aplikasi desktop dalam mode dev (otomatis mem-boot backend & frontend dev server).
+- `npm --prefix desktop run package` - Membuat installer Windows (*.exe*) di `desktop/dist/`.
 
 ## Akses Melalui Jaringan Wi-Fi
 
@@ -89,8 +102,26 @@ Skrip ini akan membuka dua jendela terminal (backend & frontend). Tekan ENTER di
 4. Dari perangkat lain di jaringan yang sama, akses frontend lewat `http://192.168.0.110:5173` dan backend lewat `http://192.168.0.110:4000`.
 5. Setel `.env` frontend (`VITE_API_URL`) menggunakan alamat IP tersebut agar frontend memanggil API yang sama.
 
+## Paket Desktop Windows
+
+1. Pastikan dependensi tiap bagian sudah terinstal:
+   - `cd backend && npm install`
+   - `cd frontend && npm install`
+   - `cd desktop && npm install`
+2. Untuk pengembangan desktop interaktif jalankan `npm --prefix desktop run dev`. Perintah ini otomatis menjalankan backend dev server, Vite, dan jendela Electron.
+3. Untuk membuat installer Windows, jalankan `npm --prefix desktop run package`. Berkas `.exe` akan tersedia di `desktop/dist/`. Jalankan file tersebut untuk memasang aplikasi di Windows lain.
+4. Backend lokal di dalam aplikasi desktop secara default berjalan dalam mode server dan bind ke `0.0.0.0:4000`, sehingga bisa diakses dari perangkat lain via `http://<alamat-ip-komputer>:4000/`. Semua file unggahan, PDF, dan database JSON disimpan di `%APPDATA%\SIPA\`.
+5. Gunakan menu **Settings ? Server** pada aplikasi desktop untuk menyesuaikan mode operasi, host/port backend, `URL API Publik`, serta menyimpan `Google Maps API Key` bagi snapshot peta. Nilai kosong otomatis mengikuti alamat lokal.
+6. Jika Anda melakukan perubahan kode, ulangi build dengan perintah di atas agar installer berisi versi terbaru.
+7. Proses packaging Electron kini menjalankan verifikasi tambahan melalui `scripts/verify-assets.js`. Pastikan perintah lint/test backend serta build frontend sudah hijau sebelum menjalankan `npm --prefix desktop run package`. Aktifkan *Developer Mode* Windows atau jalankan terminal sebagai Administrator bila muncul error `Cannot create symbolic link`.
+
 ## Catatan
 
 - Direktori `uploads/`, `generated-pdfs/`, dan `storage/database.json` dibuat otomatis.
 - Puppeteer membutuhkan resource tambahan saat pertama kali dijalankan untuk mengunduh Chromium.
 - Untuk pemakaian produksi, ganti `JWT_SECRET` dengan nilai rahasia dan siapkan penyimpanan terdedikasi (mis. database).
+
+## Pengujian
+
+- Backend: `npm --prefix backend run lint` untuk pengecekan TypeScript dan `npm --prefix backend run test` untuk menjalankan unit test (validasi checklist & analisis pembanding).
+- Frontend: `npm --prefix frontend run lint` memastikan kode React bersih sebelum build/commit.

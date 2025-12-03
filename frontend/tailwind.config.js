@@ -5,10 +5,17 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#0F766E",
-          light: "#14B8A6",
-          dark: "#115E59",
+          DEFAULT: "#047857", // Emerald 700
+          light: "#10b981",   // Emerald 500
+          dark: "#064e3b",    // Emerald 900
         },
+        accent: {
+          DEFAULT: "#f97316", // Orange 500
+          hover: "#ea580c",   // Orange 600
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
       },
     },
   },

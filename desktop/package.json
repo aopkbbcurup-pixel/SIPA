@@ -1,0 +1,80 @@
+{
+  "name": "sipa-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "dev": "cross-env ELECTRON_START_URL=http://localhost:5173 ELECTRON_USE_DEV_BACKEND=true concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:electron\"",
+    "dev:backend": "npm --prefix ../backend run dev",
+    "dev:frontend": "npm --prefix ../frontend run dev",
+    "dev:electron": "wait-on http://localhost:5173 http://localhost:4000/health && electron .",
+    "build:frontend": "cross-env VITE_API_URL=http://localhost:4000/api npm --prefix ../frontend run build",
+    "build:backend": "npm --prefix ../backend run build",
+    "prepare:assets": "npm run build:frontend && npm run build:backend && node scripts/prepare-assets.js && npm run verify:assets",
+    "verify:assets": "node scripts/verify-assets.js",
+    "package": "npm run clean && npm run prepare:assets && electron-builder --win nsis",
+    "package:dir": "npm run clean && npm run prepare:assets && electron-builder --dir",
+    "clean": "rimraf dist build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3",
+    "electron": "^30.0.9",
+    "electron-builder": "^24.13.3",
+    "fs-extra": "^11.2.0",
+    "rimraf": "^5.0.7",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.sipa.desktop",
+    "productName": "SIPA Desktop",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "config.js",
+      "package.json",
+      "node_modules/**/*",
+      {
+        "from": "build/frontend/dist",
+        "to": "frontend/dist",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "build/backend/dist",
+        "to": "backend/dist"
+      },
+      {
+        "from": "build/backend/node_modules",
+        "to": "backend/node_modules"
+      },
+      {
+        "from": "build/backend/templates",
+        "to": "backend/templates"
+      },
+      {
+        "from": "build/backend/package.json",
+        "to": "backend/package.json"
+      }
+    ],
+    "asarUnpack": [
+      "backend/templates/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

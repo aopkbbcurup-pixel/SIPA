@@ -42,5 +42,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-  }
+  },
+  "include": ["src"],
+  "exclude": ["tests", "vitest.config.ts", "dist"]
 }

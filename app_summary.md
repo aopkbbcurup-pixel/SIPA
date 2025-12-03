@@ -63,6 +63,22 @@ Peta/Sketsa Lokasi.
 
 Scan dokumen legalitas.
 
+Quality Assurance & Workflow Control:
+
+Validasi otomatis terhadap data kunci (luas, dokumen legal, lampiran) sebelum laporan dapat diajukan. Catatan audit terekam untuk setiap perubahan status, termasuk penguncian laporan setelah disetujui.
+
+Legal Verification Console:
+
+Status verifikasi SHM/IMB dapat ditandai langsung dari aplikasi, lengkap dengan riwayat siapa yang memverifikasi dan kapan dilakukan, serta pengingat tanggal kedaluwarsa dokumen.
+
+Analisis Data Pembanding:
+
+Setiap pembanding dapat menyimpan daftar penyesuaian, bobot, dan harga disesuaikan. Sistem menghitung ringkasan tertimbang sebagai referensi nilai pasar.
+
+Parameter Penilaian Terpusat:
+
+Admin dapat mengubah default safety margin, faktor likuidasi, dan checklist lampiran/ legalitas dari satu tempat sehingga konsistensi laporan terjaga.
+
 Cetak Laporan ke PDF (Report Generation):
 
 Fitur wajib: Setelah data diisi dan disetujui, sistem harus bisa menghasilkan (generate) file PDF yang formatnya rapi dan sesuai dengan template laporan di dokumen Word.

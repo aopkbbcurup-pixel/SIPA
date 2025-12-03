@@ -1,4 +1,4 @@
-import type { Report } from "../types/domain";
+﻿import type { Report, ValuationComponentResult } from "../types/domain";
 import { getBuildingStandard } from "../constants/buildingStandards";
 import { bankBengkuluLogoDataUrl } from "./bankBengkuluLogo";
 
@@ -67,11 +67,8 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-const buildAttachmentCaption = (attachment: AttachmentWithInline) => {
-  const baseLabel = attachmentCategoryLabels[attachment.category] ?? "Lampiran";
-  const name = attachment.originalName ? ` - ${escapeHtml(attachment.originalName)}` : "";
-  return `${baseLabel}${name}`;
-};
+const buildAttachmentCaption = (attachment: AttachmentWithInline) =>
+  attachmentCategoryLabels[attachment.category] ?? "Lampiran";
 
 const renderAttachmentGallery = (attachments: AttachmentWithInline[], emptyMessage: string) => {
   const imageAttachments = attachments.filter((item) => Boolean(item.dataUrl));
@@ -139,8 +136,8 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
         <td>${textOrDash(item.name)}</td>
         <td>${textOrDash(item.kind)}</td>
         <td>${textOrDash(item.address)}</td>
-        <td>${formatNumber(item.landArea, " m²")}</td>
-        <td>${formatNumber(item.buildingArea ?? undefined, " m²")}</td>
+        <td>${formatNumber(item.landArea, " m<sup>2</sup>")}</td>
+        <td>${formatNumber(item.buildingArea ?? undefined, " m<sup>2</sup>")}</td>
       </tr>
     `,
     )
@@ -164,7 +161,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
           <td>${textOrDash(doc.number)}</td>
           <td>${formatDate(doc.issueDate)}</td>
           <td>${doc.dueDate ? formatDate(doc.dueDate) : "-"}</td>
-          <td>${formatNumber(doc.area, " m²")}</td>
+          <td>${formatNumber(doc.area, " m<sup>2</sup>")}</td>
           <td>${textOrDash(doc.notes)}</td>
         </tr>
       `,
@@ -179,7 +176,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
           <td>${index + 1}</td>
           <td>${textOrDash(doc.number)}</td>
           <td>${formatDate(doc.issueDate)}</td>
-          <td>${formatNumber(doc.area, " m²")}</td>
+          <td>${formatNumber(doc.area, " m<sup>2</sup>")}</td>
           <td>${textOrDash(doc.notes)}</td>
         </tr>
       `,
@@ -191,7 +188,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
       (item, index) => `
       <tr>
         <td>${index + 1}</td>
-        <td>${formatNumber(item.landArea, " m²")}</td>
+        <td>${formatNumber(item.landArea, " m<sup>2</sup>")}</td>
         <td>${formatCurrency(item.price)}</td>
         <td>${formatCurrency(item.pricePerSquare ?? item.price / Math.max(item.landArea, 1))}</td>
         <td>${textOrDash(item.address)}</td>
@@ -205,15 +202,85 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
   const valuationInput = report.valuationInput;
   const valuationResult = report.valuationResult;
 
-  const landValue = valuationInput.landArea * valuationInput.landRate;
-  const buildingValue = valuationInput.buildingArea * valuationInput.buildingRate;
+  const fallbackLandValue = Math.round(valuationInput.landArea * valuationInput.landRate);
+  const fallbackBuildingValue = Math.round(valuationInput.buildingArea * valuationInput.buildingRate);
+  const fallbackBuildingSafety = Math.round((fallbackBuildingValue * valuationInput.safetyMarginPercent) / 100);
+  const fallbackLiquidationFactor = valuationInput.liquidationFactorPercent / 100;
+
+  const landComponent: ValuationComponentResult =
+    valuationResult.land ??
+    {
+      valueBeforeSafety: fallbackLandValue,
+      safetyDeduction: 0,
+      valueAfterSafety: fallbackLandValue,
+      liquidationValue: Math.round(fallbackLandValue * fallbackLiquidationFactor),
+    };
+
+  const buildingComponent: ValuationComponentResult =
+    valuationResult.building ??
+    {
+      valueBeforeSafety: fallbackBuildingValue,
+      safetyDeduction: fallbackBuildingSafety,
+      valueAfterSafety: Math.max(0, fallbackBuildingValue - fallbackBuildingSafety),
+      liquidationValue: Math.round(
+        Math.max(0, fallbackBuildingValue - fallbackBuildingSafety) * fallbackLiquidationFactor,
+      ),
+    };
+
+  const landValue = landComponent.valueBeforeSafety;
+  const buildingValue = buildingComponent.valueBeforeSafety;
+  const landSafetyMarginValue = landComponent.safetyDeduction;
+  const buildingSafetyMarginValue = buildingComponent.safetyDeduction;
+  const landValueAfterSafety = landComponent.valueAfterSafety;
+  const buildingValueAfterSafety = buildingComponent.valueAfterSafety;
+  const landLiquidationValue = landComponent.liquidationValue;
+  const buildingLiquidationValue = buildingComponent.liquidationValue;
+
+  const computeAverageValue = (values: Array<number | undefined>) => {
+    const filtered = values.filter(
+      (value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0,
+    );
+    if (!filtered.length) {
+      return undefined;
+    }
+    const sum = filtered.reduce((acc, value) => acc + value, 0);
+    return Math.round(sum / filtered.length);
+  };
+
+  const landAverageValue =
+    landComponent.averageValue ??
+    computeAverageValue([
+      landValue,
+      valuationInput.landArea > 0 ? valuationInput.landRate * valuationInput.landArea : undefined,
+      valuationInput.njopLand,
+    ]);
+
+  const buildingAverageValue =
+    buildingComponent.averageValue ??
+    computeAverageValue([
+      buildingValue,
+      valuationInput.buildingArea > 0 ? valuationInput.buildingRate * valuationInput.buildingArea : undefined,
+      valuationInput.njopBuilding,
+    ]);
+
   const buildingStandard = getBuildingStandard(valuationInput.buildingStandardCode);
   const buildingSpecificationList = buildingStandard
     ? buildingStandard.specification.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
     : "";
-  const safetyMarginValue =
-    (valuationResult.marketValueBeforeSafety * valuationInput.safetyMarginPercent) / 100;
-  const liquidationValue = valuationResult.liquidationValue;
+  const totalSafetyMarginValue = landSafetyMarginValue + buildingSafetyMarginValue;
+  const marketValueBeforeSafety =
+    valuationResult.marketValueBeforeSafety ?? landValue + buildingValue;
+  const collateralValueAfterSafety = landValueAfterSafety + buildingValueAfterSafety;
+  const liquidationValue = landLiquidationValue + buildingLiquidationValue;
+  const totalAverageValue = (() => {
+    const values = [landAverageValue, buildingAverageValue].filter(
+      (value): value is number => typeof value === "number" && Number.isFinite(value),
+    );
+    if (!values.length) {
+      return undefined;
+    }
+    return values.reduce((acc, value) => acc + value, 0);
+  })();
 
   const environment = report.environment;
 
@@ -242,8 +309,23 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
           body { font-family: 'Arial', sans-serif; font-size: 12px; color: #111827; }
           h1, h2, h3 { color: #0f766e; margin-bottom: 8px; }
           h1 { font-size: 22px; text-transform: uppercase; }
-          h2 { font-size: 16px; margin-top: 24px; border-bottom: 2px solid #0f766e; padding-bottom: 4px; text-transform: uppercase; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          h2 {
+            font-size: 16px;
+            margin-top: 24px;
+            border-bottom: 2px solid #0f766e;
+            padding-bottom: 4px;
+            text-transform: uppercase;
+            page-break-after: avoid;
+            break-after: avoid-page;
+          }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; page-break-inside: auto; }
+          thead { display: table-header-group; }
+          tfoot { display: table-footer-group; }
+          tr, h3, .note, .attachment-grid, .attachment-figure { page-break-inside: avoid; break-inside: avoid; }
+          ol, ul { page-break-inside: avoid; break-inside: avoid; }
+          .section > table,
+          .section > .note,
+          .section > div:first-of-type { break-before: avoid-page; page-break-before: avoid; }
           th, td { border: 1px solid #d1d5db; padding: 6px 8px; vertical-align: top; }
           th { background-color: #f1f5f9; font-weight: 600; }
           .no-border td { border: none; padding: 2px 0; }
@@ -251,7 +333,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
           .report-header__logo { width: 88px; height: auto; object-fit: contain; }
           .report-header__title { margin: 0; text-align: left; }
           .report-header__meta { font-size: 12px; color: #4b5563; margin: 0; }
-          .section { margin-top: 28px; }
+          .section { margin-top: 28px; page-break-before: avoid; page-break-inside: avoid; break-inside: avoid; }
           .small { font-size: 11px; color: #4b5563; }
           .text-muted { color: #6b7280; }
           .text-center { text-align: center; }
@@ -372,7 +454,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
               </tr>
               <tr>
                 <th>Supervisor Reviewer</th>
-                <td>${textOrDash(general.reviewerId)}</td>
+                <td>${textOrDash(general.supervisorName ?? general.reviewerId)}</td>
               </tr>
             </tbody>
           </table>
@@ -556,8 +638,8 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                   (item) => `
                   <tr>
                     <td>${item.label}</td>
-                    <td class="text-center">${item.value === true ? "✓" : ""}</td>
-                    <td class="text-center">${item.value === false ? "✓" : ""}</td>
+                    <td class="text-center">${item.value === true ? "&#10003;" : ""}</td>
+                    <td class="text-center">${item.value === false ? "&#10003;" : ""}</td>
                   </tr>
                 `,
                 )
@@ -590,7 +672,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                 <th>No.</th>
                 <th>Luas Tanah (m²)</th>
                 <th>Harga (Rp)</th>
-                <th>Harga/m² (Rp)</th>
+                <th>Harga/m<sup>2</sup> (Rp)</th>
                 <th>Lokasi</th>
                 <th>Sumber Informasi</th>
                 <th>Catatan</th>
@@ -608,7 +690,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
             <thead>
               <tr>
                 <th>Nama Agunan</th>
-                <th>Luas (m²)</th>
+                <th>Luas (m<sup>2</sup>)</th>
                 <th>Harga Satuan (Rp/m²)</th>
                 <th>Nilai Pasar (Rp)</th>
                 <th>Nilai NJOP (Rp)</th>
@@ -622,33 +704,33 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
             <tbody>
               <tr>
                 <td>Tanah</td>
-                <td>${formatNumber(valuationInput.landArea)}</td>
+                <td>${formatNumber(valuationInput.landArea, " m<sup>2</sup>")}</td>
                 <td>${formatCurrency(valuationInput.landRate)}</td>
                 <td>${formatCurrency(landValue)}</td>
                 <td>${formatCurrency(valuationInput.njopLand)}</td>
+                <td>${formatCurrency(landAverageValue)}</td>
                 <td>${formatCurrency(landValue)}</td>
-                <td>${formatCurrency(valuationResult.marketValueBeforeSafety)}</td>
-                <td>${formatCurrency(safetyMarginValue)}</td>
-                <td>${formatCurrency(valuationResult.collateralValueAfterSafety)}</td>
-                <td>${formatCurrency(liquidationValue)}</td>
+                <td>${formatCurrency(landSafetyMarginValue)}</td>
+                <td>${formatCurrency(landValueAfterSafety)}</td>
+                <td>${formatCurrency(landLiquidationValue)}</td>
               </tr>
               <tr>
                 <td>Bangunan</td>
-                <td>${formatNumber(valuationInput.buildingArea)}</td>
+                <td>${formatNumber(valuationInput.buildingArea, " m<sup>2</sup>")}</td>
                 <td>${formatCurrency(valuationInput.buildingRate)}</td>
                 <td>${formatCurrency(buildingValue)}</td>
                 <td>${formatCurrency(valuationInput.njopBuilding)}</td>
+                <td>${formatCurrency(buildingAverageValue)}</td>
                 <td>${formatCurrency(buildingValue)}</td>
-                <td>${formatCurrency(valuationResult.marketValueBeforeSafety)}</td>
-                <td>${formatCurrency(safetyMarginValue)}</td>
-                <td>${formatCurrency(valuationResult.collateralValueAfterSafety)}</td>
-                <td>${formatCurrency(liquidationValue)}</td>
+                <td>${formatCurrency(buildingSafetyMarginValue)}</td>
+                <td>${formatCurrency(buildingValueAfterSafety)}</td>
+                <td>${formatCurrency(buildingLiquidationValue)}</td>
               </tr>
               <tr>
                 <td colspan="10">
                   <div class="building-standard">
                     <div><span class="bold">Standar Bangunan:</span> ${buildingStandard ? escapeHtml(buildingStandard.name) : "-"}</div>
-                    <div><span class="bold">Harga Standar:</span> ${formatCurrency(valuationInput.buildingStandardRate)} / mA�</div>
+                    <div><span class="bold">Harga Standar:</span> ${formatCurrency(valuationInput.buildingStandardRate)} / m<sup>2</sup></div>
                     <div><span class="bold">Persentase Penyusutan:</span> ${formatNumber(valuationInput.buildingDepreciationPercent, " %")}</div>
                     ${
                       buildingSpecificationList
@@ -662,10 +744,10 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                 <th colspan="3" class="text-center">Jumlah</th>
                 <th>${formatCurrency(landValue + buildingValue)}</th>
                 <th>${formatCurrency((valuationInput.njopLand ?? 0) + (valuationInput.njopBuilding ?? 0))}</th>
-                <th>${formatCurrency(landValue + buildingValue)}</th>
-                <th>${formatCurrency(valuationResult.marketValueBeforeSafety)}</th>
-                <th>${formatCurrency(safetyMarginValue)}</th>
-                <th>${formatCurrency(valuationResult.collateralValueAfterSafety)}</th>
+                <th>${formatCurrency(totalAverageValue)}</th>
+                <th>${formatCurrency(marketValueBeforeSafety)}</th>
+                <th>${formatCurrency(totalSafetyMarginValue)}</th>
+                <th>${formatCurrency(collateralValueAfterSafety)}</th>
                 <th>${formatCurrency(liquidationValue)}</th>
               </tr>
             </tbody>
@@ -692,11 +774,11 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
             <p>&nbsp;</p>
             <p class="bold">Mengetahui, Supervisor</p>
             <div style="height: 64px;"></div>
-            <p class="bold uppercase">${textOrDash(general.reviewerId)}</p>
+            <p class="bold uppercase">${textOrDash(general.supervisorName ?? general.reviewerId)}</p>
           </div>
         </div>
 
-        <section class="section">
+        <section class="section" style="page-break-before: always;">
           <h2>Lampiran</h2>
           <h3>Foto Agunan</h3>
           ${renderAttachmentGallery(photoAttachments, "Belum ada foto agunan yang diunggah.")}
@@ -709,3 +791,9 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
     </html>
   `;
 }
+
+
+
+
+
+

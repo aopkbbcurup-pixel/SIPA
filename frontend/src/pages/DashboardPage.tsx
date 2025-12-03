@@ -4,19 +4,24 @@ import { Link } from "react-router-dom";
 import { fetchMetadata, fetchReports } from "../lib/reportApi";
 import type { MetadataResponse, Report, ReportStatus } from "../types/report";
 import { useAuthStore } from "../store/auth";
+import {
+  FileText,
+  CheckCircle,
+  XCircle,
+  Clock,
+  TrendingUp,
+  Users,
+  Shield,
+  Activity,
+  ArrowRight
+} from "lucide-react";
+import { Skeleton } from "../components/Skeleton";
 
-const statusLabel: Record<ReportStatus, string> = {
-  draft: "Draft",
-  for_review: "Menunggu Review",
-  approved: "Disetujui",
-  rejected: "Ditolak",
-};
-
-const statusColor: Record<ReportStatus, string> = {
-  draft: "bg-slate-200 text-slate-700",
-  for_review: "bg-amber-200 text-amber-900",
-  approved: "bg-emerald-200 text-emerald-900",
-  rejected: "bg-rose-200 text-rose-900",
+const statusConfig: Record<ReportStatus, { label: string; color: string; icon: any }> = {
+  draft: { label: "Draft", color: "text-slate-500 bg-slate-100", icon: FileText },
+  for_review: { label: "Menunggu Review", color: "text-amber-600 bg-amber-100", icon: Clock },
+  approved: { label: "Disetujui", color: "text-emerald-600 bg-emerald-100", icon: CheckCircle },
+  rejected: { label: "Ditolak", color: "text-rose-600 bg-rose-100", icon: XCircle },
 };
 
 export function DashboardPage() {
@@ -24,7 +29,7 @@ export function DashboardPage() {
   const [metadata, setMetadata] = useState<MetadataResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const logout = useAuthStore((state) => state.logout);
+  const { user, logout } = useAuthStore();
 
   useEffect(() => {
     let isMounted = true;
@@ -74,102 +79,230 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-lg font-semibold text-slate-800">Ringkasan Aktivitas</h2>
-        <p className="text-sm text-slate-500">Status laporan penilaian agunan saat ini.</p>
-        {loading ? (
-          <p className="mt-4 text-sm text-slate-500">Memuat data...</p>
-        ) : error ? (
-          <p className="mt-4 rounded-md bg-rose-50 p-3 text-sm text-rose-700">{error}</p>
-        ) : (
-          <div className="mt-6 grid gap-4 md:grid-cols-4">
-            {(Object.keys(byStatus) as ReportStatus[]).map((status) => (
-              <div key={status} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-medium text-slate-500">{statusLabel[status]}</p>
-                <p className="mt-2 text-2xl font-semibold text-slate-800">{byStatus[status]}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="grid gap-8 md:grid-cols-2">
-        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-800">Laporan Terbaru</h3>
-            <Link to="/reports" className="text-sm font-medium text-primary hover:text-primary-dark">
-              Lihat semua
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-dark to-primary px-8 py-10 shadow-xl">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Selamat Datang, {user?.fullName?.split(" ")[0] || "User"}!
+          </h1>
+          <p className="text-emerald-100 max-w-xl text-lg">
+            Sistem Penilaian Agunan siap membantu Anda mengelola penilaian properti dengan lebih efisien dan akurat.
+          </p>
+          <div className="mt-8 flex gap-4">
+            <Link to="/reports/new" className="btn bg-white text-primary-dark hover:bg-emerald-50 border-none shadow-lg">
+              Buat Laporan Baru
+            </Link>
+            <Link to="/reports" className="btn bg-primary-dark/30 text-white hover:bg-primary-dark/50 backdrop-blur-sm border border-white/20">
+              Lihat Semua Laporan
             </Link>
           </div>
-          {loading ? (
-            <p className="mt-4 text-sm text-slate-500">Memuat data...</p>
-          ) : latestReports.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">Belum ada laporan.</p>
-          ) : (
-            <ul className="mt-4 space-y-3">
-              {latestReports.map((report) => (
-                <li key={report.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-700">{report.title}</p>
-                      <p className="text-xs text-slate-500">{report.generalInfo.reportNumber}</p>
-                    </div>
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColor[report.status]}`}>
-                      {statusLabel[report.status]}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-500">Nasabah: {report.generalInfo.customerName}</p>
-                  <div className="mt-3 flex justify-between text-xs text-slate-400">
-                    <span>Dibuat: {new Date(report.createdAt).toLocaleDateString("id-ID")}</span>
-                    <Link to={`/reports/${report.id}`} className="font-medium text-primary hover:text-primary-dark">
-                      Detail
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
+        <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-white/10 to-transparent transform skew-x-12"></div>
+        <div className="absolute -bottom-10 -right-10 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+      </div>
 
-        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h3 className="text-lg font-semibold text-slate-800">Informasi Pengguna & Parameter</h3>
-          {metadata ? (
-            <div className="mt-4 space-y-4 text-sm text-slate-600">
-              <div>
-                <p className="font-semibold text-slate-700">Jumlah pengguna terdaftar</p>
-                <ul className="mt-2 space-y-1">
-                  <li>Penilai: {metadata.users.appraisers.length}</li>
-                  <li>Supervisor: {metadata.users.supervisors.length}</li>
-                  <li>Administrator: {metadata.users.admins.length}</li>
-                </ul>
-              </div>
-              <div>
-                <p className="font-semibold text-slate-700">Parameter Penilaian</p>
-                <p className="mt-1 text-xs text-slate-500">Safety Margin (%)</p>
-                <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                  {metadata.parameters.safetyMarginOptions.map((value) => (
-                    <span key={value} className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
-                      {value}%
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-slate-500">Faktor Likuidasi (%)</p>
-                <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                  {metadata.parameters.liquidationFactorOptions.map((value) => (
-                    <span key={value} className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
-                      {value}%
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : loading ? (
-            <p className="mt-4 text-sm text-slate-500">Memuat metadata...</p>
-          ) : (
-            <p className="mt-4 text-sm text-slate-500">Metadata belum tersedia.</p>
-          )}
+      {error && (
+        <div className="rounded-lg bg-rose-50 p-4 text-sm text-rose-700 border border-rose-200 flex items-center gap-3">
+          <XCircle className="h-5 w-5" />
+          <div>
+            <p className="font-medium">Terjadi kesalahan</p>
+            <p>{error}</p>
+          </div>
         </div>
+      )}
+
+      {/* Stats Grid */}
+      <section className="grid gap-6 md:grid-cols-4">
+        {(Object.keys(byStatus) as ReportStatus[]).map((status) => {
+          const config = statusConfig[status];
+          const Icon = config.icon;
+          return (
+            <div key={status} className="card p-6 hover:scale-[1.02] transition-transform duration-200 border-t-4" style={{ borderTopColor: status === 'approved' ? '#10b981' : status === 'rejected' ? '#f43f5e' : status === 'for_review' ? '#f59e0b' : '#cbd5e1' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-2 rounded-lg ${config.color}`}>
+                  <Icon className="h-6 w-6" />
+                </div>
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Total</span>
+              </div>
+              <p className="text-3xl font-bold text-slate-900 mb-1">{byStatus[status]}</p>
+              <p className="text-sm text-slate-500 font-medium">{config.label}</p>
+            </div>
+          );
+        })}
       </section>
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Latest Reports */}
+        <section className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-bold text-slate-900">Laporan Terbaru</h2>
+            </div>
+            <Link to="/reports" className="group flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+              Lihat semua
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+
+          <div className="card overflow-hidden border-0 shadow-lg ring-1 ring-slate-100">
+            {loading ? (
+              <div className="divide-y divide-slate-100">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="p-4 flex items-center justify-between">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-5 w-20 rounded-full" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Skeleton className="h-3 w-20 mb-1" />
+                      <Skeleton className="h-3 w-16 ml-auto" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : latestReports.length === 0 ? (
+              <div className="p-12 text-center text-slate-500 bg-slate-50/50">
+                <FileText className="h-12 w-12 mx-auto text-slate-300 mb-3" />
+                <p>Belum ada laporan yang dibuat.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {latestReports.map((report) => (
+                  <div key={report.id} className="p-4 hover:bg-slate-50/80 transition-colors duration-150 flex items-center justify-between group">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <h3 className="text-sm font-semibold text-slate-900 truncate group-hover:text-primary transition-colors">{report.title}</h3>
+                        <span className={`badge ${report.status === 'approved' ? 'badge-success' :
+                          report.status === 'rejected' ? 'badge-error' :
+                            report.status === 'for_review' ? 'badge-warning' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                          {statusConfig[report.status].label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <span className="font-medium text-slate-600">{report.generalInfo.reportNumber}</span>
+                        <span>•</span>
+                        <span>{report.generalInfo.customerName}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-slate-500 mb-1">
+                        {new Date(report.createdAt).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                      <Link to={`/reports/${report.id}`} className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 inline-flex items-center gap-1">
+                        Detail <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* System Stats */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold text-slate-900">Statistik Sistem</h2>
+          </div>
+
+          <div className="card p-6 space-y-8 border-0 shadow-lg ring-1 ring-slate-100">
+            {metadata ? (
+              <>
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="h-4 w-4 text-slate-400" />
+                    <h3 className="text-sm font-semibold text-slate-900">Pengguna Aktif</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <span className="text-slate-600 font-medium">Penilai</span>
+                      <span className="font-bold text-primary bg-white px-3 py-1 rounded-md shadow-sm border border-slate-100">{metadata.users.appraisers.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <span className="text-slate-600 font-medium">Supervisor</span>
+                      <span className="font-bold text-primary bg-white px-3 py-1 rounded-md shadow-sm border border-slate-100">{metadata.users.supervisors.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <span className="text-slate-600 font-medium">Admin</span>
+                      <span className="font-bold text-primary bg-white px-3 py-1 rounded-md shadow-sm border border-slate-100">{metadata.users.admins.length}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-slate-100">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp className="h-4 w-4 text-slate-400" />
+                    <h3 className="text-sm font-semibold text-slate-900">Parameter Global</h3>
+                  </div>
+                  <div className="space-y-5">
+                    <div>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="font-medium text-slate-600">Safety Margin</span>
+                        <span className="font-bold text-slate-900">{metadata.parameters.defaultSafetyMargin}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div className="bg-accent h-full rounded-full shadow-sm" style={{ width: `${metadata.parameters.defaultSafetyMargin}%` }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="font-medium text-slate-600">Liquidation Factor</span>
+                        <span className="font-bold text-slate-900">{metadata.parameters.defaultLiquidationFactor}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div className="bg-primary h-full rounded-full shadow-sm" style={{ width: `${metadata.parameters.defaultLiquidationFactor}%` }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-8">
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Skeleton className="h-4 w-4 rounded-full" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-100">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-6 w-12 rounded-md" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-slate-100">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Skeleton className="h-4 w-4 rounded-full" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="space-y-5">
+                    {Array.from({ length: 2 }).map((_, i) => (
+                      <div key={i}>
+                        <div className="flex justify-between mb-2">
+                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-3 w-12" />
+                        </div>
+                        <Skeleton className="h-2.5 w-full rounded-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

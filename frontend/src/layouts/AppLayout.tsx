@@ -7,6 +7,28 @@ const navigation = [
   { to: "/reports/new", label: "Buat Laporan" },
 ];
 
+import { NotificationProvider, useNotification } from "../context/NotificationContext";
+
+function Notifications() {
+  const { notifications } = useNotification();
+  if (notifications.length === 0) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      {notifications.map((notif, index) => (
+        <div key={index} className="rounded-md bg-white p-4 shadow-lg ring-1 ring-black/5 animate-in slide-in-from-right">
+          <p className="font-medium text-slate-900">Notifikasi Baru</p>
+          <p className="text-sm text-slate-500">
+            {notif.status
+              ? `Status laporan berubah menjadi ${notif.status}`
+              : "Ada pembaruan pada laporan."}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AppLayout() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -17,6 +39,7 @@ export function AppLayout() {
     if (user?.role === "admin") {
       base.push({ to: "/users", label: "Manajemen User" });
     }
+    base.push({ to: "/settings", label: "Pengaturan" });
     return base;
   }, [user?.role]);
 
@@ -26,74 +49,78 @@ export function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            <img
-              src="/bank-bengkulu-logo.jpg"
-              alt="Logo Bank Bengkulu"
-              className="h-12 w-auto"
-              loading="lazy"
-            />
-            <div>
-              <h1 className="text-xl font-semibold text-slate-800">Sistem Penilaian Agunan (SIPA)</h1>
-              <p className="text-sm text-slate-500">Digitalisasi proses penilaian agunan properti</p>
+    <NotificationProvider>
+      <div className="min-h-screen bg-slate-50">
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-md transition-all duration-200">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-4">
+              <img
+                src="/bank-bengkulu-logo.jpg"
+                alt="Logo Bank Bengkulu"
+                className="h-10 w-auto transition-transform hover:scale-105"
+                loading="lazy"
+              />
+              <div>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">Sistem Penilaian Agunan</h1>
+                <p className="text-xs font-medium text-slate-500">Digitalisasi Penilaian Properti</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-1">
+                <NavLink
+                  to="/"
+                  end
+                  className={({ isActive }) =>
+                    [
+                      "rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                    ].join(" ")
+                  }
+                >
+                  Ringkasan
+                </NavLink>
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      [
+                        "rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200",
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                      ].join(" ")
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
+              <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+              <div className="flex items-center gap-4">
+                {user && (
+                  <div className="text-right hidden sm:block">
+                    <p className="text-sm font-semibold text-slate-800">{user.fullName}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{user.role}</p>
+                  </div>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600 hover:border-red-100 active:scale-95"
+                >
+                  Keluar
+                </button>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            {user && (
-              <div className="text-right">
-                <p className="text-sm font-medium text-slate-700">{user.fullName}</p>
-                <p className="text-xs uppercase tracking-wide text-slate-400">{user.role}</p>
-              </div>
-            )}
-            <button
-              onClick={handleLogout}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
-            >
-              Keluar
-            </button>
-          </div>
-        </div>
-        <nav className="bg-slate-50">
-          <div className="mx-auto flex max-w-6xl items-center gap-4 px-6">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                [
-                  "border-b-2 px-1.5 py-3 text-sm font-medium transition",
-                  isActive
-                    ? "border-primary text-primary-dark"
-                    : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700",
-                ].join(" ")
-              }
-            >
-              Ringkasan
-            </NavLink>
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  [
-                    "border-b-2 px-1.5 py-3 text-sm font-medium transition",
-                    isActive
-                      ? "border-primary text-primary-dark"
-                      : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700",
-                  ].join(" ")
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-        </nav>
-      </header>
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <Outlet />
-      </main>
-    </div>
+        </header>
+        <main className="mx-auto max-w-7xl px-6 py-8 animate-in fade-in duration-500">
+          <Outlet />
+        </main>
+        <Notifications />
+      </div>
+    </NotificationProvider>
   );
 }

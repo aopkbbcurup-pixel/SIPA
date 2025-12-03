@@ -14,7 +14,12 @@ const storage = multer.diskStorage({
   },
 });
 
-const allowedMime = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const allowedFileTypes: Array<{ mime: string; extensions: string[] }> = [
+  { mime: "image/jpeg", extensions: [".jpg", ".jpeg"] },
+  { mime: "image/png", extensions: [".png"] },
+  { mime: "image/webp", extensions: [".webp"] },
+  { mime: "application/pdf", extensions: [".pdf"] },
+];
 
 export const upload = multer({
   storage,
@@ -23,8 +28,18 @@ export const upload = multer({
     files: 10,
   },
   fileFilter: (_req, file, cb) => {
-    if (!allowedMime.includes(file.mimetype)) {
-      return cb(new Error("Tipe file tidak diizinkan"));
+    const extension = path.extname(file.originalname).toLowerCase();
+    const allowed = allowedFileTypes.find(
+      (type) =>
+        type.mime === file.mimetype &&
+        (type.extensions.length === 0 || type.extensions.includes(extension)),
+    );
+    if (!allowed) {
+      return cb(
+        new Error(
+          `Tipe file tidak diizinkan untuk ${file.originalname}. Hanya JPG, PNG, WEBP, atau PDF.`,
+        ),
+      );
     }
     cb(null, true);
   },

@@ -1,0 +1,14 @@
+﻿
+> frontend@0.0.0 lint
+> eslint .
+
+
+D:\PROJECT\SIPA\frontend\src\components\LocationPicker.tsx
+  72:8  warning  React Hook useMemo has a missing dependency: 'defaultCenter'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\PROJECT\SIPA\frontend\src\context\NotificationContext.tsx
+  56:8   warning  React Hook useEffect has a missing dependency: 'socket'. Either include it or remove the dependency array                       react-hooks/exhaustive-deps
+  73:14  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+Γ£û 3 problems (1 error, 2 warnings)
+

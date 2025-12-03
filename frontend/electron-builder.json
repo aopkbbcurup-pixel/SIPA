@@ -1,0 +1,38 @@
+{
+    "appId": "com.sipa.desktop",
+    "productName": "SIPA",
+    "directories": {
+        "output": "release"
+    },
+    "files": [
+        "dist/**/*",
+        "dist-electron/**/*"
+    ],
+    "extraResources": [
+        {
+            "from": "../backend/release/sipa-backend.exe",
+            "to": "backend/sipa-backend.exe"
+        },
+        {
+            "from": "../backend/.env.example",
+            "to": "backend/.env"
+        }
+    ],
+    "win": {
+        "target": [
+            {
+                "target": "nsis",
+                "arch": [
+                    "x64"
+                ]
+            }
+        ],
+        "icon": "public/favicon.ico"
+    },
+    "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true,
+        "createDesktopShortcut": true,
+        "createStartMenuShortcut": true
+    }
+}

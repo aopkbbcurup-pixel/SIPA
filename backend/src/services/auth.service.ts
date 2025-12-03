@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "../store/database";
 import { env } from "../config/env";
 import type { User } from "../types/domain";
+import { AppError, NotFoundError, AuthenticationError } from "../utils/errors";
 
 export interface AuthPayload {
   sub: string;
@@ -15,16 +16,23 @@ export interface LoginResult {
   user: Omit<User, "passwordHash">;
 }
 
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
 export class AuthService {
-  async login(username: string, password: string): Promise<LoginResult> {
-    const user = db.findUserByUsername(username);
+  async login(credentials: LoginCredentials): Promise<LoginResult> {
+    const { username, password } = credentials;
+
+    const user = await db.findUserByUsername(username);
     if (!user) {
-      throw new Error("User not found");
+      throw new AuthenticationError("Invalid username or password");
     }
 
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatches) {
-      throw new Error("Invalid credentials");
+      throw new AppError("Kredensial tidak valid.", 401, "INVALID_CREDENTIALS");
     }
 
     const payload: AuthPayload = {
