@@ -1232,6 +1232,50 @@ export class ReportService {
 
     return (await workbook.xlsx.writeBuffer()) as unknown as Buffer;
   }
+
+  async saveSignature(
+    reportId: string,
+    role: "appraiser" | "supervisor",
+    imageDataUrl: string,
+    actor: { id: string; role: UserRole },
+  ) {
+    const report = await this.getReport(reportId);
+    const now = new Date().toISOString();
+
+    const signature = {
+      id: randomUUID(),
+      actorId: actor.id,
+      actorRole: actor.role,
+      signedAt: now,
+      name: actor.role === "appraiser" ? report.generalInfo.appraiserName ?? "Appraiser" : report.generalInfo.supervisorName ?? "Supervisor",
+      imageDataUrl,
+    };
+
+    const updatedSignatures = {
+      ...report.signatures,
+      [role]: signature,
+    };
+
+    const auditEntry = createAuditEntry(
+      "signature_added",
+      actor,
+      `Tanda tangan ditambahkan oleh ${role}`,
+    );
+
+    const updatedReport: Report = {
+      ...report,
+      signatures: updatedSignatures,
+      auditTrail: [...report.auditTrail, auditEntry],
+      updatedAt: now,
+    };
+
+    await db.updateReport(reportId, {
+      signatures: updatedSignatures,
+      auditTrail: [...report.auditTrail, auditEntry],
+      updatedAt: now,
+    });
+    return updatedReport;
+  }
 }
 
 export const reportService = new ReportService();

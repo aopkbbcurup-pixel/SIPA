@@ -13,6 +13,7 @@ import {
   updateReportStatus,
   verifyLegalDocument,
   uploadReportAttachments,
+  saveSignature,
 } from "../lib/reportApi";
 import { buildGoogleMapsEmbedUrl, buildGoogleMapsLink, buildStaticMapUrl } from "../lib/maps";
 import { responseLabel } from "../utils/inspectionChecklist";
@@ -26,6 +27,7 @@ import type {
 import { useAuthStore } from "../store/auth";
 import { api } from "../lib/api";
 import { MapView } from "../components/MapView";
+import { SignaturePad } from "../components/SignaturePad";
 
 const statusLabel: Record<ReportStatus, string> = {
   draft: "Draft",
@@ -156,6 +158,8 @@ export function ReportDetailPage() {
   const [remarksExpanded, setRemarksExpanded] = useState(false);
   const [gisComparables, setGisComparables] = useState<any[]>([]);
   const [gisLoading, setGisLoading] = useState(false);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [signatureRole, setSignatureRole] = useState<"appraiser" | "supervisor" | null>(null);
 
   const uploadsBase = useMemo(() => getUploadsBaseUrl(), []);
 
@@ -558,6 +562,26 @@ export function ReportDetailPage() {
       setActionError(message);
     } finally {
       setVerificationBusy(null);
+    }
+  };
+
+  const handleSaveSignature = async (dataUrl: string) => {
+    if (!id || !signatureRole) return;
+    try {
+      setActionError(null);
+      setActionSuccess(null);
+      await saveSignature(id, signatureRole, dataUrl);
+
+      // Refresh report to get the new signature
+      const updated = await fetchReport(id);
+      setReport(updated);
+
+      setActionSuccess("Tanda tangan berhasil disimpan.");
+      setShowSignaturePad(false);
+      setSignatureRole(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal menyimpan tanda tangan.";
+      setActionError(message);
     }
   };
 
@@ -1751,6 +1775,84 @@ export function ReportDetailPage() {
             })}
 
           <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <h2 className="text-lg font-semibold text-slate-800">Tanda Tangan</h2>
+            <div className="mt-4 grid gap-6 md:grid-cols-2">
+              {/* Appraiser Signature */}
+              <div className="flex flex-col items-center rounded-lg border border-slate-200 p-6 text-center">
+                <p className="mb-4 text-sm font-medium text-slate-500">Penilai Internal</p>
+                {report.signatures?.appraiser ? (
+                  <div className="mb-2">
+                    <img
+                      src={report.signatures.appraiser.imageDataUrl}
+                      alt="Tanda Tangan Penilai"
+                      className="h-24 object-contain"
+                    />
+                    <p className="mt-2 text-sm font-semibold text-slate-900">
+                      {report.signatures.appraiser.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatDate(report.signatures.appraiser.signedAt, true)}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-4 flex h-24 w-full items-center justify-center rounded bg-slate-50 text-xs text-slate-400">
+                    Belum ditandatangani
+                  </div>
+                )}
+                {authUser?.role === "appraiser" &&
+                  report.assignedAppraiserId === authUser.id &&
+                  !report.signatures?.appraiser && (
+                    <button
+                      onClick={() => {
+                        setSignatureRole("appraiser");
+                        setShowSignaturePad(true);
+                      }}
+                      className="mt-auto rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark"
+                    >
+                      Tanda Tangani
+                    </button>
+                  )}
+              </div>
+
+              {/* Supervisor Signature */}
+              <div className="flex flex-col items-center rounded-lg border border-slate-200 p-6 text-center">
+                <p className="mb-4 text-sm font-medium text-slate-500">Supervisor</p>
+                {report.signatures?.supervisor ? (
+                  <div className="mb-2">
+                    <img
+                      src={report.signatures.supervisor.imageDataUrl}
+                      alt="Tanda Tangan Supervisor"
+                      className="h-24 object-contain"
+                    />
+                    <p className="mt-2 text-sm font-semibold text-slate-900">
+                      {report.signatures.supervisor.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatDate(report.signatures.supervisor.signedAt, true)}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-4 flex h-24 w-full items-center justify-center rounded bg-slate-50 text-xs text-slate-400">
+                    Belum ditandatangani
+                  </div>
+                )}
+                {(authUser?.role === "supervisor" || authUser?.role === "admin") &&
+                  !report.signatures?.supervisor && (
+                    <button
+                      onClick={() => {
+                        setSignatureRole("supervisor");
+                        setShowSignaturePad(true);
+                      }}
+                      className="mt-auto rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark"
+                    >
+                      Tanda Tangani
+                    </button>
+                  )}
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-slate-800">H. Lampiran</h2>
@@ -1891,9 +1993,36 @@ export function ReportDetailPage() {
           </div>
         )
       }
+      {showSignaturePad && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Tanda Tangan sebagai {signatureRole === "appraiser" ? "Penilai" : "Supervisor"}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowSignaturePad(false);
+                  setSignatureRole(null);
+                }}
+                className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <SignaturePad
+              onSave={handleSaveSignature}
+              onClear={() => { }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
+
 
 
 

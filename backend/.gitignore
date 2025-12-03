@@ -5,3 +5,4 @@ uploads
 generated-pdfs
 storage/*.json
 release
+serviceAccountKey.json

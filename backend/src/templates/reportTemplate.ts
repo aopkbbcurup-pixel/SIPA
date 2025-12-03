@@ -1,4 +1,4 @@
-﻿import type { Report, ValuationComponentResult } from "../types/domain";
+﻿import type { Report, ReportSignatures, ValuationComponentResult } from "../types/domain";
 import { getBuildingStandard } from "../constants/buildingStandards";
 import { bankBengkuluLogoDataUrl } from "./bankBengkuluLogo";
 
@@ -79,9 +79,9 @@ const renderAttachmentGallery = (attachments: AttachmentWithInline[], emptyMessa
   return `
     <div class="attachment-grid">
       ${imageAttachments
-        .map((attachment) => {
-          const uploadedLabel = attachment.uploadedAt ? `Diunggah: ${formatDate(attachment.uploadedAt, true)}` : "";
-          return `
+      .map((attachment) => {
+        const uploadedLabel = attachment.uploadedAt ? `Diunggah: ${formatDate(attachment.uploadedAt, true)}` : "";
+        return `
             <figure class="attachment-figure">
               <div class="attachment-image-wrapper">
                 <img src="${attachment.dataUrl}" alt="${buildAttachmentCaption(attachment)}" />
@@ -92,10 +92,17 @@ const renderAttachmentGallery = (attachments: AttachmentWithInline[], emptyMessa
               </figcaption>
             </figure>
           `;
-        })
-        .join("")}
+      })
+      .join("")}
     </div>
   `;
+};
+
+const renderSignature = (signature?: ReportSignatures["appraiser"]) => {
+  if (signature && signature.imageDataUrl && signature.imageDataUrl.startsWith("data:image")) {
+    return `<img src="${signature.imageDataUrl}" style="height: 64px; object-fit: contain; margin: 5px 0;" />`;
+  }
+  return `<div style="height: 64px;"></div>`;
 };
 
 export function renderReportHtml(report: Report, options?: { attachments?: AttachmentWithInline[] }) {
@@ -448,9 +455,8 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
               </tr>
               <tr>
                 <th>Nama Contact Person (OTS)</th>
-                <td>${textOrDash(general.fieldContactName)}${general.fieldContactRelation ? ` (${general.fieldContactRelation})` : ""}${
-                  general.fieldContactPhone ? `, ${general.fieldContactPhone}` : ""
-                }</td>
+                <td>${textOrDash(general.fieldContactName)}${general.fieldContactRelation ? ` (${general.fieldContactRelation})` : ""}${general.fieldContactPhone ? `, ${general.fieldContactPhone}` : ""
+    }</td>
               </tr>
               <tr>
                 <th>Supervisor Reviewer</th>
@@ -596,8 +602,8 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
               <tr>
                 <th>Tahun Dibangun / Usia</th>
                 <td>${textOrDash(
-                  report.technical.yearBuilt ? `${report.technical.yearBuilt} / ${new Date().getFullYear() - report.technical.yearBuilt} Tahun` : undefined,
-                )}</td>
+      report.technical.yearBuilt ? `${report.technical.yearBuilt} / ${new Date().getFullYear() - report.technical.yearBuilt} Tahun` : undefined,
+    )}</td>
               </tr>
               <tr>
                 <th>Kondisi Bangunan</th>
@@ -634,16 +640,16 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
             </thead>
             <tbody>
               ${checklistItems
-                .map(
-                  (item) => `
+      .map(
+        (item) => `
                   <tr>
                     <td>${item.label}</td>
                     <td class="text-center">${item.value === true ? "&#10003;" : ""}</td>
                     <td class="text-center">${item.value === false ? "&#10003;" : ""}</td>
                   </tr>
                 `,
-                )
-                .join("")}
+      )
+      .join("")}
             </tbody>
           </table>
         </section>
@@ -732,11 +738,10 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                     <div><span class="bold">Standar Bangunan:</span> ${buildingStandard ? escapeHtml(buildingStandard.name) : "-"}</div>
                     <div><span class="bold">Harga Standar:</span> ${formatCurrency(valuationInput.buildingStandardRate)} / m<sup>2</sup></div>
                     <div><span class="bold">Persentase Penyusutan:</span> ${formatNumber(valuationInput.buildingDepreciationPercent, " %")}</div>
-                    ${
-                      buildingSpecificationList
-                        ? `<div><span class="bold">Spesifikasi:</span><ul class="building-standard__spec">${buildingSpecificationList}</ul></div>`
-                        : ""
-                    }
+                    ${buildingSpecificationList
+      ? `<div><span class="bold">Spesifikasi:</span><ul class="building-standard__spec">${buildingSpecificationList}</ul></div>`
+      : ""
+    }
                   </div>
                 </td>
               </tr>
@@ -763,33 +768,35 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
 
         <p class="mt-24">Demikian laporan ini disusun untuk digunakan sebagaimana mestinya.</p>
 
-        <div class="signature-block">
-          <div class="signature-cell">
-            <p>Bengkulu, ${formatDate(general.reportDate ?? report.updatedAt)}</p>
-            <p class="bold">Penilai Internal</p>
-            <div style="height: 64px;"></div>
-            <p class="bold uppercase">${textOrDash(general.appraiserName)}</p>
-          </div>
-          <div class="signature-cell">
-            <p>&nbsp;</p>
-            <p class="bold">Mengetahui, Supervisor</p>
-            <div style="height: 64px;"></div>
-            <p class="bold uppercase">${textOrDash(general.supervisorName ?? general.reviewerId)}</p>
-          </div>
-        </div>
 
-        <section class="section" style="page-break-before: always;">
-          <h2>Lampiran</h2>
-          <h3>Foto Agunan</h3>
+
+<div class="signature-block" >
+  <div class="signature-cell" >
+    <p>Bengkulu, ${formatDate(general.reportDate ?? report.updatedAt)} </p>
+      < p class="bold" > Penilai Internal </p>
+            ${renderSignature(report.signatures?.appraiser)}
+<p class="bold uppercase" > ${textOrDash(general.appraiserName)} </p>
+  </div>
+  < div class="signature-cell" >
+    <p>& nbsp; </p>
+      < p class="bold" > Mengetahui, Supervisor </p>
+            ${renderSignature(report.signatures?.supervisor)}
+<p class="bold uppercase" > ${textOrDash(general.supervisorName ?? general.reviewerId)} </p>
+  </div>
+  </div>
+
+  < section class="section" style = "page-break-before: always;" >
+    <h2>Lampiran </h2>
+    < h3 > Foto Agunan </h3>
           ${renderAttachmentGallery(photoAttachments, "Belum ada foto agunan yang diunggah.")}
-          <h3>Posisi Agunan</h3>
+<h3>Posisi Agunan </h3>
           ${renderAttachmentGallery(positionAttachments, "Belum ada peta posisi agunan yang diunggah.")}
-          <h3>Sketsa Sentuh Tanahku (ATR/BPN)</h3>
+<h3>Sketsa Sentuh Tanahku(ATR / BPN) </h3>
           ${renderAttachmentGallery(sketchAttachments, "Belum ada sketsa Sentuh Tanahku yang diunggah.")}
-        </section>
-      </body>
-    </html>
-  `;
+</section>
+  </body>
+  </html>
+    `;
 }
 
 

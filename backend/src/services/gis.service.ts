@@ -23,8 +23,8 @@ export class GisService {
 
         for (const report of reports) {
             // Skip if no coordinates
-            const reportLat = report.collateral[0]?.latitude;
-            const reportLng = report.collateral[0]?.longitude;
+            const reportLat = report.collateral?.[0]?.latitude;
+            const reportLng = report.collateral?.[0]?.longitude;
 
             if (!reportLat || !reportLng) continue;
 
@@ -46,7 +46,7 @@ export class GisService {
                     id: report.id,
                     lat: reportLat,
                     lng: reportLng,
-                    address: report.collateral[0]?.address || report.generalInfo.customerAddress || "Alamat tidak tersedia",
+                    address: report.collateral?.[0]?.address || report.generalInfo.customerAddress || "Alamat tidak tersedia",
                     price: price,
                     landArea: input.landArea,
                     buildingArea: input.buildingArea,

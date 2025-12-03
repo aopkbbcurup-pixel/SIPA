@@ -12,7 +12,13 @@ export interface PdfResult {
 
 type InlineAttachment = Report["attachments"][number] & { dataUrl?: string };
 
-async function inlineAttachments(attachments: Report["attachments"]): Promise<InlineAttachment[]> {
+async function inlineAttachments(attachments: Report["attachments"] | undefined): Promise<InlineAttachment[]> {
+  if (!attachments || !Array.isArray(attachments)) {
+    console.log("PdfService: No attachments found or invalid format.");
+    return [];
+  }
+
+  console.log(`PdfService: Processing ${attachments.length} attachments...`);
   return Promise.all(
     attachments.map(async (attachment) => {
       const mime = attachment.mimeType;
@@ -25,12 +31,14 @@ async function inlineAttachments(attachments: Report["attachments"]): Promise<In
       try {
         const exists = await fs.pathExists(filePath);
         if (!exists) {
+          console.warn(`PdfService: Attachment file not found at ${filePath}`);
           return { ...attachment };
         }
         const buffer = await fs.readFile(filePath);
         const base64 = buffer.toString("base64");
         return { ...attachment, dataUrl: `data:${mime};base64,${base64}` };
-      } catch {
+      } catch (err) {
+        console.error(`PdfService: Error reading attachment ${filePath}:`, err);
         return { ...attachment };
       }
     }),
@@ -38,29 +46,52 @@ async function inlineAttachments(attachments: Report["attachments"]): Promise<In
 }
 
 export async function buildReportHtmlWithInlineAssets(report: Report): Promise<string> {
+  console.log("PdfService: Inlining assets...");
   const attachmentsWithInline = await inlineAttachments(report.attachments);
   return renderReportHtml(report, { attachments: attachmentsWithInline });
 }
 
 export class PdfService {
   async generate(report: Report): Promise<PdfResult> {
-    const browser = await puppeteer.launch({ headless: true });
+    console.log("PdfService: Starting PDF generation for report", report.id);
     try {
-      const page = await browser.newPage();
-      const html = await buildReportHtmlWithInlineAssets(report);
-      await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 0 });
-      const fileName = `${report.generalInfo.reportNumber}.pdf`;
-      await fs.ensureDir(paths.pdfDir);
-      const filePath = path.join(paths.pdfDir, fileName);
-      await page.pdf({
-        path: filePath,
-        format: "A4",
-        printBackground: true,
-        margin: { top: "24px", bottom: "24px", left: "24px", right: "24px" },
+      console.log("PdfService: Launching browser...");
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
       });
-      return { fileName, filePath };
-    } finally {
-      await browser.close();
+
+      try {
+        console.log("PdfService: Browser launched. Creating new page...");
+        const page = await browser.newPage();
+
+        console.log("PdfService: Building HTML content...");
+        const html = await buildReportHtmlWithInlineAssets(report);
+
+        console.log("PdfService: Setting page content...");
+        await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 60000 }); // Increased timeout
+
+        const fileName = `${report.generalInfo.reportNumber}.pdf`;
+        await fs.ensureDir(paths.pdfDir);
+        const filePath = path.join(paths.pdfDir, fileName);
+
+        console.log(`PdfService: Generating PDF to ${filePath}...`);
+        await page.pdf({
+          path: filePath,
+          format: "A4",
+          printBackground: true,
+          margin: { top: "24px", bottom: "24px", left: "24px", right: "24px" },
+        });
+
+        console.log("PdfService: PDF generated successfully.");
+        return { fileName, filePath };
+      } finally {
+        console.log("PdfService: Closing browser...");
+        await browser.close();
+      }
+    } catch (error) {
+      console.error("PdfService: Error generating PDF:", error);
+      throw error;
     }
   }
 }

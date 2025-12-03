@@ -8,6 +8,7 @@ const navigation = [
 ];
 
 import { NotificationProvider, useNotification } from "../context/NotificationContext";
+import { Chatbox } from "../components/Chatbox";
 
 function Notifications() {
   const { notifications } = useNotification();
@@ -120,6 +121,7 @@ export function AppLayout() {
           <Outlet />
         </main>
         <Notifications />
+        <Chatbox />
       </div>
     </NotificationProvider>
   );

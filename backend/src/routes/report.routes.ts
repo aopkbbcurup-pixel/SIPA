@@ -13,6 +13,7 @@ import {
   previewReportController,
   updateLegalVerificationController,
   exportReportsController,
+  saveSignatureController,
 } from "../controllers/report.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { validateBody, validateQuery } from "../middleware/validate.middleware";
@@ -44,5 +45,6 @@ router.post("/:id/attachments", authenticate(), upload.array("files", 10), uploa
 router.delete("/:id/attachments/:attachmentId", authenticate(), deleteAttachmentController);
 router.get("/:id/preview", authenticate(), previewReportController);
 router.get("/:id/pdf", authenticate(), generatePdfController);
+router.post("/:id/sign", authenticate(), saveSignatureController);
 
 export default router;

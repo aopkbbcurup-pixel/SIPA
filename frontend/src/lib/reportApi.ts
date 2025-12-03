@@ -184,3 +184,7 @@ export async function analyzeImage(file: File) {
   });
   return data;
 }
+export async function saveSignature(reportId: string, role: "appraiser" | "supervisor", imageDataUrl: string) {
+  const { data } = await api.post<{ success: true }>(`/reports/${reportId}/sign`, { role, imageDataUrl });
+  return data;
+}

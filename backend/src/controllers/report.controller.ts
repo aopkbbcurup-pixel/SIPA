@@ -344,6 +344,7 @@ export async function generatePdfController(req: AuthenticatedRequest, res: Resp
     const pdf: PdfResult = await pdfService.generate(report);
     return res.download(pdf.filePath, pdf.fileName);
   } catch (error) {
+    console.error("PDF Generation Error:", error);
     return respondWithError(res, error, 500);
   }
 }
@@ -387,5 +388,37 @@ export async function exportReportsController(req: Request, res: Response) {
     return res.send(buffer);
   } catch (error) {
     return respondWithError(res, error, 500);
+  }
+}
+export async function saveSignatureController(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { id } = req.params as { id: string };
+    const { role, imageDataUrl } = req.body as { role: "appraiser" | "supervisor"; imageDataUrl: string };
+    const actor = req.user!;
+
+    let report;
+    try {
+      report = await reportService.getReport(id);
+    } catch (error) {
+      return respondWithError(res, error, 404);
+    }
+
+    // Permission check
+    if (role === "appraiser") {
+      if (report.assignedAppraiserId !== actor.id) {
+        return res.status(403).json({ message: unauthorizedMessage });
+      }
+    } else if (role === "supervisor") {
+      if (actor.role !== "supervisor" && actor.role !== "admin") {
+        return res.status(403).json({ message: unauthorizedMessage });
+      }
+    } else {
+      return res.status(400).json({ message: "Role tidak valid untuk tanda tangan." });
+    }
+
+    await reportService.saveSignature(id, role, imageDataUrl, { id: actor.id, role: actor.role });
+    return res.json({ success: true });
+  } catch (error) {
+    return respondWithError(res, error, 400);
   }
 }
