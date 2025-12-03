@@ -12,7 +12,8 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "migrate": "ts-node-dev src/scripts/migrate-json-to-mongo.ts",
-    "migrate:prod": "node dist/scripts/migrate-json-to-mongo.js"
+    "migrate:prod": "node dist/scripts/migrate-json-to-mongo.js",
+    "seed:firestore": "ts-node-dev src/scripts/seed-firestore.ts"
   },
   "keywords": [],
   "author": "",

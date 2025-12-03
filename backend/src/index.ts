@@ -30,7 +30,20 @@ export async function createApp() {
   app.use("/api", limiter); // Apply rate limiting to API routes only
 
   app.use(cors({
-    origin: env.corsOrigin,
+    origin: (requestOrigin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!requestOrigin) return callback(null, true);
+      // If CORS_ORIGIN is *, allow all by reflecting the origin
+      if (env.corsOrigin === "*") {
+        return callback(null, true);
+      }
+      // Otherwise check against the list
+      const allowedOrigins = env.corsOrigin.split(",").map(o => o.trim());
+      if (allowedOrigins.includes(requestOrigin)) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }));
   app.use(express.json({ limit: "10mb" }));
@@ -95,8 +108,15 @@ export async function bootstrap() {
   // Initialize Socket.io
   const io = new Server(httpServer, {
     cors: {
-      origin: env.corsOrigin, // Allow all connections for simplicity, or configure based on env
-      methods: ["GET", "POST"]
+      origin: (requestOrigin, callback) => {
+        if (!requestOrigin) return callback(null, true);
+        if (env.corsOrigin === "*") return callback(null, true);
+        const allowedOrigins = env.corsOrigin.split(",").map(o => o.trim());
+        if (allowedOrigins.includes(requestOrigin)) return callback(null, true);
+        callback(new Error("Not allowed by CORS"), false);
+      },
+      methods: ["GET", "POST"],
+      credentials: true
     }
   });
   notificationService.init(io);
