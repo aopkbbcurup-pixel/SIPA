@@ -770,29 +770,29 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
 
 
 
-<div class="signature-block" >
-  <div class="signature-cell" >
-    <p>Bengkulu, ${formatDate(general.reportDate ?? report.updatedAt)} </p>
-      < p class="bold" > Penilai Internal </p>
-            ${renderSignature(report.signatures?.appraiser)}
-<p class="bold uppercase" > ${textOrDash(general.appraiserName)} </p>
+<div class="signature-block">
+  <div class="signature-cell">
+    <p>Bengkulu, ${formatDate(general.reportDate ?? report.updatedAt)}</p>
+    <p class="bold">Penilai Internal</p>
+    ${renderSignature(report.signatures?.appraiser)}
+    <p class="bold uppercase">${textOrDash(general.appraiserName)}</p>
   </div>
-  < div class="signature-cell" >
-    <p>& nbsp; </p>
-      < p class="bold" > Mengetahui, Supervisor </p>
-            ${renderSignature(report.signatures?.supervisor)}
-<p class="bold uppercase" > ${textOrDash(general.supervisorName ?? general.reviewerId)} </p>
+  <div class="signature-cell">
+    <p>&nbsp;</p>
+    <p class="bold">Mengetahui, Supervisor</p>
+    ${renderSignature(report.signatures?.supervisor)}
+    <p class="bold uppercase">${textOrDash(general.supervisorName ?? general.reviewerId)}</p>
   </div>
-  </div>
+</div>
 
-  < section class="section" style = "page-break-before: always;" >
-    <h2>Lampiran </h2>
-    < h3 > Foto Agunan </h3>
-          ${renderAttachmentGallery(photoAttachments, "Belum ada foto agunan yang diunggah.")}
-<h3>Posisi Agunan </h3>
-          ${renderAttachmentGallery(positionAttachments, "Belum ada peta posisi agunan yang diunggah.")}
-<h3>Sketsa Sentuh Tanahku(ATR / BPN) </h3>
-          ${renderAttachmentGallery(sketchAttachments, "Belum ada sketsa Sentuh Tanahku yang diunggah.")}
+<section class="section" style="page-break-before: always;">
+  <h2>Lampiran</h2>
+  <h3>Foto Agunan</h3>
+  ${renderAttachmentGallery(photoAttachments, "Belum ada foto agunan yang diunggah.")}
+  <h3>Posisi Agunan</h3>
+  ${renderAttachmentGallery(positionAttachments, "Belum ada peta posisi agunan yang diunggah.")}
+  <h3>Sketsa Sentuh Tanahku (ATR/BPN)</h3>
+  ${renderAttachmentGallery(sketchAttachments, "Belum ada sketsa Sentuh Tanahku yang diunggah.")}
 </section>
   </body>
   </html>
