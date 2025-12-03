@@ -1,3 +1,5 @@
+import { db } from "../store/database";
+
 export interface ComparableProperty {
     id: string;
     lat: number;
@@ -12,42 +14,64 @@ export interface ComparableProperty {
 
 export class GisService {
     async getNearbyComparables(lat: number, lng: number, radiusKm: number = 1): Promise<ComparableProperty[]> {
-        // Simulate processing delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        // Fetch all reports (in a real app with many records, we'd use a geospatial query supported by the DB)
+        // Since we are using Firestore/JSON/Mongo abstraction without native geo-query in the interface,
+        // we'll fetch all (or recent) reports and filter in memory.
+        const reports = await db.getReports({ status: "approved" });
 
-        // Mock Data Generation
-        // Generate 5-10 random properties around the center point
-        const count = 5 + Math.floor(Math.random() * 5);
         const comparables: ComparableProperty[] = [];
 
-        for (let i = 0; i < count; i++) {
-            // Random offset for lat/lng (approx 111km per degree)
-            // 0.001 degree is approx 111 meters
-            const latOffset = (Math.random() - 0.5) * 0.01; // +/- 500m approx
-            const lngOffset = (Math.random() - 0.5) * 0.01;
+        for (const report of reports) {
+            // Skip if no coordinates
+            const reportLat = report.collateral[0]?.latitude;
+            const reportLng = report.collateral[0]?.longitude;
 
-            const type = Math.random() > 0.3 ? "house" : (Math.random() > 0.5 ? "land" : "shophouse");
-            const landArea = 60 + Math.floor(Math.random() * 200);
-            const buildingArea = type === "land" ? 0 : 36 + Math.floor(Math.random() * 150);
+            if (!reportLat || !reportLng) continue;
 
-            // Price estimation mock
-            const pricePerMeter = 5000000 + Math.random() * 5000000;
-            const price = (landArea * pricePerMeter) + (buildingArea * 3000000);
+            const distance = this.calculateDistance(lat, lng, reportLat, reportLng);
 
-            comparables.push({
-                id: `comp-${i + 1}`,
-                lat: lat + latOffset,
-                lng: lng + lngOffset,
-                address: `Jl. Contoh Sekitar No. ${i + 1}, Jakarta`,
-                price: Math.round(price),
-                landArea,
-                buildingArea,
-                type,
-                distance: Math.round(Math.sqrt(latOffset * latOffset + lngOffset * lngOffset) * 111000) // Rough distance in meters
-            });
+            if (distance <= radiusKm * 1000) { // Convert radius to meters
+                const valuation = report.valuationResult;
+                const input = report.valuationInput;
+
+                // Estimate price (Market Value)
+                const price = valuation.marketValue || (valuation.land?.valueBeforeSafety || 0) + (valuation.building?.valueBeforeSafety || 0);
+
+                // Determine type
+                let type: "house" | "land" | "shophouse" = "house";
+                if (input.buildingArea === 0) type = "land";
+                // Simple heuristic for shophouse could be based on zoning or other fields, defaulting to house for now
+
+                comparables.push({
+                    id: report.id,
+                    lat: reportLat,
+                    lng: reportLng,
+                    address: report.collateral[0]?.address || report.generalInfo.customerAddress || "Alamat tidak tersedia",
+                    price: price,
+                    landArea: input.landArea,
+                    buildingArea: input.buildingArea,
+                    type: type,
+                    distance: Math.round(distance)
+                });
+            }
         }
 
-        return comparables.sort((a, b) => a.distance - b.distance);
+        return comparables.sort((a, b) => a.distance - b.distance).slice(0, 10); // Limit to closest 10
+    }
+
+    private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+        const R = 6371e3; // metres
+        const φ1 = lat1 * Math.PI / 180; // φ, λ in radians
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // in metres
     }
 }
 
