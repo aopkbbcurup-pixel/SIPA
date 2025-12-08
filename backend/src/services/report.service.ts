@@ -1019,13 +1019,15 @@ export class ReportService {
       };
     }
 
+    const auditMetadata: Record<string, unknown> | undefined = options.reason
+      ? { reason: options.reason }
+      : undefined;
+
     const auditEntry = createAuditEntry(
       "status_changed",
       { id: options.actorId, role: options.actorRole },
       `Status laporan berubah menjadi ${status}.`,
-      {
-        reason: options.reason,
-      },
+      auditMetadata,
     );
     metadata.auditTrail = [...report.auditTrail, auditEntry];
 
