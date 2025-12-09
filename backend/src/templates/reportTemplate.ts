@@ -711,7 +711,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
               <tr>
                 <td>Tanah</td>
                 <td>${formatNumber(valuationInput.landArea, " m<sup>2</sup>")}</td>
-                <td>${formatCurrency(valuationInput.marketPriceLandPerM2 || (valuationInput.landArea > 0 ? valuationInput.landRate : 0))}</td>
+                <td></td>
                 <td>${formatCurrency(valuationInput.landRate)}</td>
                 <td>${formatCurrency(valuationInput.njopLandPerM2 || (valuationInput.njopLand > 0 && valuationInput.landArea > 0 ? valuationInput.njopLand / valuationInput.landArea : 0))}</td>
                 <td>${formatCurrency(landAverageValue && valuationInput.landArea > 0 ? landAverageValue / valuationInput.landArea : 0)}</td>

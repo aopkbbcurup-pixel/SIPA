@@ -1587,7 +1587,7 @@ export function ReportDetailPage() {
                         ) : null}
                       </div>
                       <div className="rounded-lg border border-slate-200 p-4">
-                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Hasil Perhitungan (v3)</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Hasil Perhitungan (v4)</h3>
                         <div className="mt-3 overflow-x-auto">
                           <table className="min-w-full divide-y divide-slate-200 text-sm">
                             <thead className="bg-slate-100">
@@ -1610,9 +1610,9 @@ export function ReportDetailPage() {
                                 <td className="px-3 py-2 text-slate-700">1</td>
                                 <td className="px-3 py-2 font-medium text-slate-700">Tanah</td>
                                 <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatNumber(report.valuationInput.landArea)}</td>
-                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(report.valuationInput.landRate)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap"></td>
                                 <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
-                                  {formatCurrency(report.valuationInput.marketPriceLandPerM2 || (report.valuationInput.landArea > 0 ? report.valuationInput.landRate : 0))}
+                                  {formatCurrency(report.valuationInput.landRate)}
                                 </td>
                                 <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
                                   {formatCurrency(report.valuationInput.njopLandPerM2 || (report.valuationInput.njopLand > 0 && report.valuationInput.landArea > 0 ? report.valuationInput.njopLand / report.valuationInput.landArea : 0))}
