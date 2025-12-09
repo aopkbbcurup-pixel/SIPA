@@ -1587,7 +1587,7 @@ export function ReportDetailPage() {
                         ) : null}
                       </div>
                       <div className="rounded-lg border border-slate-200 p-4">
-                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Hasil Perhitungan (v4)</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Hasil Perhitungan (v5)</h3>
                         <div className="mt-3 overflow-x-auto">
                           <table className="min-w-full divide-y divide-slate-200 text-sm">
                             <thead className="bg-slate-100">
@@ -1615,7 +1615,7 @@ export function ReportDetailPage() {
                                   {formatCurrency(report.valuationInput.landRate)}
                                 </td>
                                 <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
-                                  {formatCurrency(report.valuationInput.njopLandPerM2 || (report.valuationInput.njopLand > 0 && report.valuationInput.landArea > 0 ? report.valuationInput.njopLand / report.valuationInput.landArea : 0))}
+                                  {formatCurrency(report.valuationInput.njopLandPerM2 || (report.valuationInput.njopLand ?? 0))}
                                 </td>
                                 <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
                                   {formatCurrency(valuationBreakdown?.land?.averageValue && report.valuationInput.landArea > 0 ? valuationBreakdown.land.averageValue / report.valuationInput.landArea : undefined)}

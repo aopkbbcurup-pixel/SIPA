@@ -713,7 +713,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                 <td>${formatNumber(valuationInput.landArea, " m<sup>2</sup>")}</td>
                 <td></td>
                 <td>${formatCurrency(valuationInput.landRate)}</td>
-                <td>${formatCurrency(valuationInput.njopLandPerM2 || (valuationInput.njopLand > 0 && valuationInput.landArea > 0 ? valuationInput.njopLand / valuationInput.landArea : 0))}</td>
+                <td>${formatCurrency(valuationInput.njopLandPerM2 || (valuationInput.njopLand ?? 0))}</td>
                 <td>${formatCurrency(landAverageValue && valuationInput.landArea > 0 ? landAverageValue / valuationInput.landArea : 0)}</td>
                 <td>${formatCurrency(landValue)}</td>
                 <td>${formatCurrency(landSafetyMarginValue)}</td>
