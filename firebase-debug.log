@@ -1,0 +1,16 @@
+[debug] [2025-12-09T10:50:43.102Z] ----------------------------------------------------------------------
+[debug] [2025-12-09T10:50:43.105Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2025-12-09T10:50:43.106Z] CLI Version:   14.11.2
+[debug] [2025-12-09T10:50:43.106Z] Platform:      win32
+[debug] [2025-12-09T10:50:43.106Z] Node Version:  v22.19.0
+[debug] [2025-12-09T10:50:43.107Z] Time:          Tue Dec 09 2025 17:50:43 GMT+0700 (Western Indonesia Time)
+[debug] [2025-12-09T10:50:43.107Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-09T10:50:43.466Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-09T10:50:43.467Z] > authorizing via signed-in user (ipaula.apple@gmail.com)
+[debug] [2025-12-09T10:50:43.467Z] [iam] checking project sipa-9daf1 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-09T10:50:43.470Z] Checked if tokens are valid: true, expires at: 1765280002306
+[debug] [2025-12-09T10:50:43.470Z] Checked if tokens are valid: true, expires at: 1765280002306
+[debug] [2025-12-09T10:50:43.472Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions [none]
+[debug] [2025-12-09T10:50:43.472Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions x-goog-quota-user=projects/sipa-9daf1
+[debug] [2025-12-09T10:50:43.472Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
