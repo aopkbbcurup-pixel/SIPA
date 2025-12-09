@@ -1,0 +1,36 @@
+[debug] [2025-12-09T10:33:22.595Z] ----------------------------------------------------------------------
+[debug] [2025-12-09T10:33:22.600Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2025-12-09T10:33:22.601Z] CLI Version:   14.11.2
+[debug] [2025-12-09T10:33:22.601Z] Platform:      win32
+[debug] [2025-12-09T10:33:22.601Z] Node Version:  v22.19.0
+[debug] [2025-12-09T10:33:22.602Z] Time:          Tue Dec 09 2025 17:33:22 GMT+0700 (Western Indonesia Time)
+[debug] [2025-12-09T10:33:22.602Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-09T10:33:22.987Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-09T10:33:22.989Z] > authorizing via signed-in user (ipaula.apple@gmail.com)
+[debug] [2025-12-09T10:33:22.989Z] [iam] checking project sipa-9daf1 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-09T10:33:22.992Z] Checked if tokens are valid: false, expires at: 1765277034017
+[debug] [2025-12-09T10:33:22.992Z] Checked if tokens are valid: false, expires at: 1765277034017
+[debug] [2025-12-09T10:33:22.992Z] > refreshing access token with scopes: []
+[debug] [2025-12-09T10:33:22.995Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-09T10:33:22.995Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-09T10:33:23.305Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-09T10:33:23.305Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-09T10:33:23.321Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions [none]
+[debug] [2025-12-09T10:33:23.321Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions x-goog-quota-user=projects/sipa-9daf1
+[debug] [2025-12-09T10:33:23.322Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-09T10:33:23.686Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions 200
+[debug] [2025-12-09T10:33:23.686Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sipa-9daf1:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-09T10:33:23.687Z] Checked if tokens are valid: true, expires at: 1765280002306
+[debug] [2025-12-09T10:33:23.688Z] Checked if tokens are valid: true, expires at: 1765280002306
+[debug] [2025-12-09T10:33:23.688Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/sipa-9daf1 [none]
+[debug] [2025-12-09T10:33:24.087Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/sipa-9daf1 200
+[debug] [2025-12-09T10:33:24.088Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/sipa-9daf1 {"projectId":"sipa-9daf1","projectNumber":"727325926364","displayName":"SIPA","name":"projects/sipa-9daf1","resources":{"hostingSite":"sipa-9daf1"},"state":"ACTIVE","etag":"1_6254a6ae-eb97-4f78-a888-d5fec3afb125"}
+[info] 
+[info] === Deploying to 'sipa-9daf1'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-12-09T10:33:24.103Z] Checked if tokens are valid: true, expires at: 1765280002306
+[debug] [2025-12-09T10:33:24.103Z] Checked if tokens are valid: true, expires at: 1765280002306
+[debug] [2025-12-09T10:33:24.104Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/sipa-9daf1/versions [none]
+[debug] [2025-12-09T10:33:24.104Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/sipa-9daf1/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}

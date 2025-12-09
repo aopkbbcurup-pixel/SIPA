@@ -713,7 +713,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                 <td>${formatNumber(valuationInput.landArea, " m<sup>2</sup>")}</td>
                 <td>${formatCurrency(valuationInput.marketPriceLandPerM2 || (valuationInput.landArea > 0 ? valuationInput.landRate : 0))}</td>
                 <td>${formatCurrency(valuationInput.landRate)}</td>
-                <td>${formatCurrency(valuationInput.njopLandPerM2 ? valuationInput.njopLandPerM2 * valuationInput.landArea : (valuationInput.njopLand || 0))}</td>
+                <td>${formatCurrency(valuationInput.njopLandPerM2 || (valuationInput.njopLand > 0 && valuationInput.landArea > 0 ? valuationInput.njopLand / valuationInput.landArea : 0))}</td>
                 <td>${formatCurrency(landAverageValue && valuationInput.landArea > 0 ? landAverageValue / valuationInput.landArea : 0)}</td>
                 <td>${formatCurrency(landValue)}</td>
                 <td>${formatCurrency(landSafetyMarginValue)}</td>
@@ -725,7 +725,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                 <td>${formatNumber(valuationInput.buildingArea, " m<sup>2</sup>")}</td>
                 <td>${formatCurrency(valuationInput.buildingStandardRate || valuationInput.buildingRate)}</td>
                 <td>-</td>
-                <td>${formatCurrency(valuationInput.njopBuilding ? valuationInput.njopBuilding * valuationInput.buildingArea : (valuationInput.njopBuilding || 0))}</td>
+                <td>${formatCurrency(valuationInput.njopBuilding || (valuationInput.njopBuilding && valuationInput.buildingArea > 0 ? valuationInput.njopBuilding / valuationInput.buildingArea : 0))}</td>
                 <td>${formatCurrency(buildingAverageValue && valuationInput.buildingArea > 0 ? buildingAverageValue / valuationInput.buildingArea : 0)}</td>
                 <td>${formatCurrency(buildingValue)}</td>
                 <td>${formatCurrency(buildingSafetyMarginValue)}</td>
