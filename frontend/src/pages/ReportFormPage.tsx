@@ -183,8 +183,29 @@ const defaultForm: ReportInputPayload = {
 
 
 function calculateValuation(input: ReportInputPayload["valuationInput"]): ValuationResult {
+  // Logic for Vehicle and Machine/Heavy Equipment
+  if (input.assetType === "vehicle" || input.assetType === "machine") {
+    const marketPrice = input.marketPrice ?? 0;
+    const safetyMarginDeduction = Math.round((marketPrice * input.safetyMarginPercent) / 100);
+    const valueAfterSafety = marketPrice - safetyMarginDeduction;
+    const liquidationValue = Math.round((valueAfterSafety * input.liquidationFactorPercent) / 100);
+
+    return {
+      marketValue: marketPrice,
+      marketValueBeforeSafety: marketPrice,
+      collateralValueAfterSafety: valueAfterSafety,
+      liquidationValue,
+      totalSafetyDeduction: safetyMarginDeduction,
+    };
+  }
+
+  // Logic for Property (Land & Building)
   const landValue = Math.round(input.landArea * input.landRate);
-  const buildingValue = Math.round(input.buildingArea * input.buildingRate);
+
+  // Use buildingStandardRate (base) to ignore depreciation, as per new requirement
+  const appliedBuildingRate = input.buildingStandardRate;
+  const buildingValue = Math.round(input.buildingArea * appliedBuildingRate);
+
   const landSafetyDeduction = 0;
   const buildingSafetyDeduction = Math.round((buildingValue * input.safetyMarginPercent) / 100);
   const landValueAfterSafety = landValue - landSafetyDeduction;
@@ -208,7 +229,7 @@ function calculateValuation(input: ReportInputPayload["valuationInput"]): Valuat
   const landAverageValue = computeAverageValue([landValue, Math.round(input.landArea * input.landRate), input.njopLand]);
   const buildingAverageValue = computeAverageValue([
     buildingValue,
-    Math.round(input.buildingArea * input.buildingRate),
+    Math.round(input.buildingArea * appliedBuildingRate),
     input.njopBuilding,
   ]);
   const landComponent: ValuationResult["land"] = {
@@ -574,12 +595,12 @@ export function ReportFormPage() {
     }));
   };
 
-  const updateValuationInput = (key: keyof ReportInputPayload["valuationInput"], value: number) => {
+  const updateValuationInput = (key: keyof ReportInputPayload["valuationInput"], value: any) => {
     setFormData((prev) => ({
       ...prev,
       valuationInput: {
         ...prev.valuationInput,
-        [key]: Number.isNaN(value) ? 0 : value,
+        [key]: value,
       },
     }));
   };
@@ -931,8 +952,8 @@ export function ReportFormPage() {
                   key={index}
                   onClick={() => setCurrentStep(index)}
                   className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${currentStep === index
-                      ? "bg-primary/10 text-primary"
-                      : "text-slate-600 hover:bg-slate-50"
+                    ? "bg-primary/10 text-primary"
+                    : "text-slate-600 hover:bg-slate-50"
                     }`}
                 >
                   <span>{step.title}</span>

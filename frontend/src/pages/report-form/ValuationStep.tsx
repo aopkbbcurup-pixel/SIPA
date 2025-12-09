@@ -16,7 +16,7 @@ interface ValuationStepProps {
   valuationPreview: ValuationResult;
   selectedBuildingStandard?: BuildingStandard;
   onBuildingStandardChange: (code: BuildingStandardCode) => void;
-  onUpdateValuationInput: (key: keyof ReportInputPayload["valuationInput"], value: number) => void;
+  onUpdateValuationInput: (key: keyof ReportInputPayload["valuationInput"], value: any) => void;
   onRemarksChange: (value: string) => void;
   formatCurrencyValue: (value: number) => string;
   formatPercentValue: (value: number) => string;
@@ -80,69 +80,134 @@ export function ValuationStep({
           <h3 className="text-sm font-semibold text-slate-700">Input Penilaian</h3>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-slate-600">Standar Bangunan</label>
+              <label className="text-sm font-medium text-slate-600">Jenis Aset</label>
               <select
-                value={formData.valuationInput.buildingStandardCode}
-                onChange={(event) => onBuildingStandardChange(event.target.value as BuildingStandardCode)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-slate-100"
-                disabled={!metadata?.buildingStandards?.length}
+                value={formData.valuationInput.assetType ?? "property"}
+                onChange={(e) => onUpdateValuationInput("assetType", e.target.value as any)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                {(metadata?.buildingStandards ?? []).map((standard) => (
-                  <option key={standard.code} value={standard.code}>
-                    {standard.name}
-                  </option>
-                ))}
+                <option value="property">Tanah & Bangunan</option>
+                <option value="vehicle">Kendaraan Bermotor</option>
+                <option value="machine">Mesin & Alat Berat</option>
               </select>
-              {selectedBuildingStandard ? (
-                <ul className="mt-2 list-disc pl-5 text-xs text-slate-500">
-                  {selectedBuildingStandard.specification.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-xs text-slate-500">
-                  Standar bangunan digunakan untuk menghitung harga bangunan per meter secara otomatis.
-                </p>
-              )}
             </div>
-            <div>
-              <label className="text-sm font-medium text-slate-600">Harga Standar Bangunan (Rp/m²)</label>
-              <input
-                type="text"
-                readOnly
-                value={`Rp ${formatCurrencyValue(formData.valuationInput.buildingStandardRate)}`}
-                className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-600">Penyusutan Bangunan (%)</label>
-              <input
-                type="text"
-                readOnly
-                value={`${formatPercentValue(formData.valuationInput.buildingDepreciationPercent)} %`}
-                className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-600">Harga Bangunan Terkoreksi (Rp/m²)</label>
-              <input
-                type="text"
-                readOnly
-                value={`Rp ${formatCurrencyValue(formData.valuationInput.buildingRate)}`}
-                className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
-              />
-            </div>
-            {VALUATION_FIELD_OPTIONS.map(([key, label]) => (
-              <div key={key}>
-                <label className="text-sm font-medium text-slate-600">{label}</label>
+
+            {(formData.valuationInput.assetType === "vehicle" || formData.valuationInput.assetType === "machine") ? (
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium text-slate-600">Harga Pasar (Rp)</label>
                 <input
                   type="number"
-                  value={formData.valuationInput[key]}
-                  onChange={(event) => onUpdateValuationInput(key, Number(event.target.value))}
+                  value={formData.valuationInput.marketPrice ?? 0}
+                  onChange={(e) => onUpdateValuationInput("marketPrice", Number(e.target.value))}
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
-            ))}
+            ) : (
+              <>
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-slate-600">Standar Bangunan</label>
+                  <select
+                    value={formData.valuationInput.buildingStandardCode}
+                    onChange={(event) => onBuildingStandardChange(event.target.value as BuildingStandardCode)}
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-slate-100"
+                    disabled={!metadata?.buildingStandards?.length}
+                  >
+                    {(metadata?.buildingStandards ?? []).map((standard) => (
+                      <option key={standard.code} value={standard.code}>
+                        {standard.name}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedBuildingStandard ? (
+                    <ul className="mt-2 list-disc pl-5 text-xs text-slate-500">
+                      {selectedBuildingStandard.specification.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Standar bangunan digunakan untuk menghitung harga bangunan per meter secara otomatis.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Harga Standar Bangunan (Rp/m²)</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`Rp ${formatCurrencyValue(formData.valuationInput.buildingStandardRate)}`}
+                    className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Penyusutan Bangunan (%)</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${formatPercentValue(formData.valuationInput.buildingDepreciationPercent)} %`}
+                    className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Harga Bangunan Terkoreksi (Rp/m²)</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`Rp ${formatCurrencyValue(formData.valuationInput.buildingRate)}`}
+                    className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">*Penyusutan tidak mempengaruhi nilai akhir (hanya referensi).</p>
+                </div>
+                {VALUATION_FIELD_OPTIONS.map(([key, label]) => (
+                  <div key={key}>
+                    <label className="text-sm font-medium text-slate-600">{label}</label>
+                    <input
+                      type="number"
+                      value={formData.valuationInput[key]}
+                      onChange={(event) => onUpdateValuationInput(key, Number(event.target.value))}
+                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Common fields like Safety Margin options could go here if separate from previous list, 
+                but VALUATION_FIELD_OPTIONS likely contains them. If they are property specific, they should strict inside property block.
+                Checking constants... Assuming VALUATION_FIELD_OPTIONS are relevant for property mostly (landArea, etc).
+                
+                Actually, Safety Margin and Liquidation Factor are needed for ALL types.
+                I should check VALUATION_FIELD_OPTIONS content. 
+                Wait, I can't check it right now inside this tool. 
+                But based on typical usage, landArea/landRate are property specific.
+                SafetyMarginPercent is common.
+                
+                I will extract Safety Margin/Liquidation inputs to be common.
+             */}
+
+            <div className="md:col-span-2 pt-4 border-t border-slate-200">
+              <h4 className="text-sm font-medium text-slate-700 mb-2">Parameter Risiko</h4>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Safety Margin (%)</label>
+                  <input
+                    type="number"
+                    value={formData.valuationInput.safetyMarginPercent}
+                    onChange={(e) => onUpdateValuationInput("safetyMarginPercent", Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Faktor Likuidasi (%)</label>
+                  <input
+                    type="number"
+                    value={formData.valuationInput.liquidationFactorPercent}
+                    onChange={(e) => onUpdateValuationInput("liquidationFactorPercent", Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

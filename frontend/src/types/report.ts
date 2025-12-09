@@ -220,6 +220,9 @@ export interface ValuationInput {
   liquidationFactorPercent: number;
   safetyMarginSource?: string;
   liquidationFactorSource?: string;
+  // New fields for Vehicle/Machine
+  assetType?: "property" | "vehicle" | "machine";
+  marketPrice?: number;
 }
 
 export interface ValuationComponentResult {
