@@ -78,7 +78,7 @@ export interface LegalDocument {
 
 export interface CollateralItem {
   id: string;
-  kind: "residential" | "commercial" | "land" | "other";
+  kind: "residential" | "commercial" | "land" | "vehicle" | "machine" | "other";
   name: string;
   address: string;
   latitude?: number;
@@ -88,6 +88,15 @@ export interface CollateralItem {
   occupancyStatus?: CollateralOccupancyStatus;
   occupancyNotes?: string;
   sentuhTanahkuDistanceMeter?: number;
+  // Vehicle & Machine specifics
+  brand?: string;
+  model?: string;
+  manufacturingYear?: number;
+  color?: string;
+  engineNumber?: string;
+  chassisNumber?: string;
+  serialNumber?: string;
+  productionCapacity?: string;
   legalDocuments: LegalDocument[];
   inspectionChecklist?: InspectionChecklistItem[];
 }
@@ -206,6 +215,9 @@ export interface ValuationInput {
   liquidationFactorPercent: number;
   safetyMarginSource?: string;
   liquidationFactorSource?: string;
+  // Non-property inputs
+  marketPrice?: number;
+  assetType?: "property" | "vehicle" | "machine";
 }
 
 export interface ValuationComponentResult {

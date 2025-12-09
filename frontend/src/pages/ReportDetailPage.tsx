@@ -1800,7 +1800,7 @@ export function ReportDetailPage() {
                           if (confirm("Apakah Anda yakin ingin menghapus tanda tangan ini?")) {
                             try {
                               await deleteSignature(report.id, "appraiser");
-                              fetchReportData();
+                              handleRetry();
                             } catch (error) {
                               console.error("Failed to delete signature", error);
                               alert("Gagal menghapus tanda tangan.");
@@ -1855,7 +1855,7 @@ export function ReportDetailPage() {
                           if (confirm("Apakah Anda yakin ingin menghapus tanda tangan ini?")) {
                             try {
                               await deleteSignature(report.id, "supervisor");
-                              fetchReportData();
+                              handleRetry();
                             } catch (error) {
                               console.error("Failed to delete signature", error);
                               alert("Gagal menghapus tanda tangan.");

@@ -628,12 +628,42 @@ function normaliseComparables(items: ComparableInput[]): MarketComparable[] {
 }
 
 function calculateValuation(input: ValuationInput): ValuationResult {
+  // Logic for Vehicle and Machine/Heavy Equipment
+  if (input.assetType === "vehicle" || input.assetType === "machine") {
+    const marketPrice = input.marketPrice ?? 0;
+
+    // Safety Margin % based on type (defaulting if not provided in input, though input should have it)
+    // However, the requirement says: Vehicle = 30%, Machine = 40%.
+    // We should respect the input.safetyMarginPercent if it adheres to these rules, or enforce it here.
+    // The previous implementation took it from input. Let's assume input is correct, but we might want to log/warn if it differs?
+    // For now, we trust the input `safetyMarginPercent` passed from frontend/controller.
+
+    const safetyMarginDeduction = Math.round((marketPrice * input.safetyMarginPercent) / 100);
+    const valueAfterSafety = marketPrice - safetyMarginDeduction;
+    const liquidationValue = Math.round((valueAfterSafety * input.liquidationFactorPercent) / 100);
+
+    return {
+      marketValue: marketPrice,
+      marketValueBeforeSafety: marketPrice,
+      collateralValueAfterSafety: valueAfterSafety,
+      liquidationValue,
+      totalSafetyDeduction: safetyMarginDeduction,
+    };
+  }
+
+  // Logic for Property (Land & Building)
+  // Requirement: "Untuk perhitungan penyusutan bangunan tidak mempengaruhi perhitungan"
+  // This means we use `buildingStandardRate` (base rate before depreciation) instead of `buildingRate`.
+
   const rawLandValue = input.landArea * input.landRate;
-  const rawBuildingValue = input.buildingArea * input.buildingRate;
+
+  // OLD Was: const rawBuildingValue = input.buildingArea * input.buildingRate;
+  // NEW: Use base rate to ignore depreciation
+  const appliedBuildingRate = input.buildingStandardRate;
+  const rawBuildingValue = input.buildingArea * appliedBuildingRate;
 
   const landValue = Math.round(rawLandValue);
   const buildingValue = Math.round(rawBuildingValue);
-
 
   const landSafetyDeduction = 0;
   const buildingSafetyDeduction = Math.round((buildingValue * input.safetyMarginPercent) / 100);

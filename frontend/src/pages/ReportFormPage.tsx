@@ -13,6 +13,8 @@ import type {
   ReportInputPayload,
   ValuationResult,
   InspectionChecklistItem,
+  QualityCheck,
+  QualitySummary,
 } from "../types/report";
 import { useAuthStore } from "../store/auth";
 import { mergeChecklistWithTemplate } from "../utils/inspectionChecklist";
@@ -21,6 +23,7 @@ import { CollateralStep } from "./report-form/CollateralStep";
 import { TechnicalStep } from "./report-form/TechnicalStep";
 import { ComparablesStep } from "./report-form/ComparablesStep";
 import { ValuationStep } from "./report-form/ValuationStep";
+import { QualityCheckPanel } from "../components/QualityCheckPanel";
 
 function applyValuationUsingMetadata(
   draft: ReportInputPayload,
@@ -260,6 +263,11 @@ export function ReportFormPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Quality Check State
+  const [qualityChecks, setQualityChecks] = useState<QualityCheck[]>([]);
+  const [qualitySummary, setQualitySummary] = useState<QualitySummary>({ total: 0, passed: 0, failed: 0, warnings: 0 });
+
   const mapReportToForm = useCallback((report: Report): ReportInputPayload => {
     return {
       title: report.title,
@@ -307,8 +315,8 @@ export function ReportFormPage() {
       },
       facility: report.facility
         ? {
-            ...report.facility,
-          }
+          ...report.facility,
+        }
         : undefined,
       comparables: report.comparables.map((item) => ({
         id: item.id,
@@ -361,15 +369,15 @@ export function ReportFormPage() {
             const next: ReportInputPayload = {
               ...prev,
               assignedAppraiserId,
-            generalInfo: {
-              ...prev.generalInfo,
-              reviewerId: prev.generalInfo.reviewerId || data.users.supervisors[0]?.id,
-              supervisorName:
-                prev.generalInfo.supervisorName && prev.generalInfo.supervisorName.length > 0
-                  ? prev.generalInfo.supervisorName
-                  : data.users.supervisors[0]?.fullName ?? "",
+              generalInfo: {
+                ...prev.generalInfo,
+                reviewerId: prev.generalInfo.reviewerId || data.users.supervisors[0]?.id,
+                supervisorName:
+                  prev.generalInfo.supervisorName && prev.generalInfo.supervisorName.length > 0
+                    ? prev.generalInfo.supervisorName
+                    : data.users.supervisors[0]?.fullName ?? "",
                 appraiserName:
-                prev.generalInfo.appraiserName || defaultAppraiser?.fullName || prev.generalInfo.appraiserName,
+                  prev.generalInfo.appraiserName || defaultAppraiser?.fullName || prev.generalInfo.appraiserName,
               },
               valuationInput: {
                 ...prev.valuationInput,
@@ -408,6 +416,11 @@ export function ReportFormPage() {
         setOtherRisksText((mapped.environment.otherRisks ?? []).join("\n"));
         setPositiveFactorsText((mapped.environment.positiveFactors ?? []).join("\n"));
         setRiskNotesText((mapped.environment.riskNotes ?? []).join("\n"));
+
+        // Initialize quality checks from report
+        if (report.qualityChecks) setQualityChecks(report.qualityChecks);
+        if (report.qualitySummary) setQualitySummary(report.qualitySummary);
+
         setCurrentStep(0);
       })
       .catch((err) => {
@@ -464,12 +477,12 @@ export function ReportFormPage() {
   };
 
   const selectedBuildingStandard: BuildingStandard | undefined = useMemo(() => {
-  if (!metadata?.buildingStandards?.length) {
-    return undefined;
-  }
-  const code = formData.valuationInput.buildingStandardCode;
-  return metadata.buildingStandards.find((item) => item.code === code) ?? metadata.buildingStandards[0];
-}, [metadata, formData.valuationInput.buildingStandardCode]);
+    if (!metadata?.buildingStandards?.length) {
+      return undefined;
+    }
+    const code = formData.valuationInput.buildingStandardCode;
+    return metadata.buildingStandards.find((item) => item.code === code) ?? metadata.buildingStandards[0];
+  }, [metadata, formData.valuationInput.buildingStandardCode]);
 
   const totalComparableWeight = useMemo(
     () =>
@@ -519,24 +532,24 @@ export function ReportFormPage() {
     updateGeneralInfo(key, value ? new Date(value).toISOString() : "");
   };
 
-const updateTechnical = <K extends keyof ReportInputPayload["technical"]>(
-  key: K,
-  value: ReportInputPayload["technical"][K],
-) => {
-  setFormData((prev) => {
-    const next: ReportInputPayload = {
-      ...prev,
-      technical: {
-        ...prev.technical,
-        [key]: value,
-      },
-    };
-    if (key === "yearBuilt") {
-      return applyBuildingValuation(next);
-    }
-    return next;
-  });
-};
+  const updateTechnical = <K extends keyof ReportInputPayload["technical"]>(
+    key: K,
+    value: ReportInputPayload["technical"][K],
+  ) => {
+    setFormData((prev) => {
+      const next: ReportInputPayload = {
+        ...prev,
+        technical: {
+          ...prev.technical,
+          [key]: value,
+        },
+      };
+      if (key === "yearBuilt") {
+        return applyBuildingValuation(next);
+      }
+      return next;
+    });
+  };
 
   const updateEnvironment = <K extends keyof ReportInputPayload["environment"]>(
     key: K,
@@ -637,11 +650,11 @@ const updateTechnical = <K extends keyof ReportInputPayload["technical"]>(
         collateral: next.length
           ? next
           : [
-              {
-                ...defaultCollateral,
-                inspectionChecklist: mergeChecklistWithTemplate(template, []),
-              },
-            ],
+            {
+              ...defaultCollateral,
+              inspectionChecklist: mergeChecklistWithTemplate(template, []),
+            },
+          ],
       };
     });
   };
@@ -712,9 +725,14 @@ const updateTechnical = <K extends keyof ReportInputPayload["technical"]>(
       };
       const preparedPayload = applyBuildingValuation(payload);
       if (isEditing && reportId) {
-        await updateReport(reportId, preparedPayload);
+        const updatedReport = await updateReport(reportId, preparedPayload);
+
+        // Update quality feedback immediately
+        if (updatedReport.qualityChecks) setQualityChecks(updatedReport.qualityChecks);
+        if (updatedReport.qualitySummary) setQualitySummary(updatedReport.qualitySummary);
+
         setSuccessMessage("Perubahan draft berhasil disimpan.");
-        setTimeout(() => navigate(`/reports/${reportId}`), 800);
+        // Optional: you can timeout or keep them here
       } else {
         const report = await createReport(preparedPayload);
         setSuccessMessage("Laporan berhasil dibuat. Mengalihkan ke detail...");
@@ -823,8 +841,8 @@ const updateTechnical = <K extends keyof ReportInputPayload["technical"]>(
       ? "Menyimpan..."
       : "Simpan Perubahan"
     : saving
-    ? "Menyimpan..."
-    : "Simpan Laporan";
+      ? "Menyimpan..."
+      : "Simpan Laporan";
 
   if (isInitialLoading) {
     return (
@@ -865,37 +883,75 @@ const updateTechnical = <K extends keyof ReportInputPayload["technical"]>(
         </ol>
       </div>
 
-      <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">{renderStepContent()}</div>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+        <div className="lg:col-span-3">
+          <div className="mb-6 flex justify-between">
+            <button
+              type="button"
+              onClick={goPrev}
+              disabled={currentStep === 0}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              Kembali
+            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={saving}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {submitButtonLabel}
+              </button>
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={currentStep === steps.length - 1}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                Lanjut
+              </button>
+            </div>
+          </div>
 
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={goPrev}
-          disabled={currentStep === 0 || saving}
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Sebelumnya
-        </button>
-        {currentStep < steps.length - 1 ? (
-          <button
-            type="button"
-            onClick={goNext}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark"
-          >
-            Berikutnya
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={saving}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitButtonLabel}
-          </button>
-        )}
+          <div className="mb-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-2 text-xl font-bold text-slate-900">{steps[currentStep].title}</h2>
+            <p className="mb-6 text-sm text-slate-500">{steps[currentStep].description}</p>
+            {renderStepContent()}
+          </div>
+        </div>
+
+        <div className="space-y-6 lg:col-span-1">
+          {/* Steps Navigation Sidebar */}
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-4 font-semibold text-slate-900">Navigasi</h3>
+            <div className="space-y-1">
+              {steps.map((step, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentStep(index)}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${currentStep === index
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                >
+                  <span>{step.title}</span>
+                  {currentStep === index && <div className="h-2 w-2 rounded-full bg-primary" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quality Check Panel */}
+          {isEditing && (
+            <QualityCheckPanel
+              checks={qualityChecks}
+              summary={qualitySummary}
+              className="sticky top-24"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
 }
-

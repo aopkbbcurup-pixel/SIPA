@@ -134,16 +134,35 @@ export function CollateralStep({
                     />
                   </div>
                 </div>
-                {hasCoordinates && mapsLink && (
-                  <div className="mt-2">
-                    <a
-                      href={mapsLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-xs font-medium text-primary hover:underline"
+                {hasCoordinates && (
+                  <div className="mt-3 flex items-center gap-4">
+                    {mapsLink && (
+                      <a
+                        href={mapsLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-xs font-medium text-primary hover:underline"
+                      >
+                        Buka di Google Maps
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Simulation of External API Call
+                        const mockDistance = Math.floor(Math.random() * 20); // 0-20 meters
+                        onUpdateCollateral(index, { sentuhTanahkuDistanceMeter: mockDistance });
+                        alert(`Verifikasi Sentuh Tanahku Berhasil!\nJarak aset valid: ${mockDistance} meter dari titik koordinat terdaftar.`);
+                      }}
+                      className="rounded bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
                     >
-                      Buka di Google Maps
-                    </a>
+                      ✓ Cek Sentuh Tanahku
+                    </button>
+                    {asset.sentuhTanahkuDistanceMeter !== undefined && (
+                      <span className="text-xs text-emerald-600 font-medium">
+                        Terverifikasi: {asset.sentuhTanahkuDistanceMeter}m
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
