@@ -361,8 +361,13 @@ export function ReportFormPage() {
         category: item.category,
       })),
       valuationInput: {
-        ...defaultForm.valuationInput, // Merge defaults first to ensure structure
+        ...defaultForm.valuationInput,
         ...report.valuationInput,
+        // Fallback: If njopLandPerM2 is missing (legacy data), try to derive from Total NJOP
+        njopLandPerM2: report.valuationInput.njopLandPerM2 ||
+          (report.valuationInput.njopLand && report.valuationInput.landArea > 0
+            ? Math.round(report.valuationInput.njopLand / report.valuationInput.landArea)
+            : undefined),
       },
       remarks: report.remarks,
     } as ReportInputPayload;
