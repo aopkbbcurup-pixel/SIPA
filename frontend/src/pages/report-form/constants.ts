@@ -48,6 +48,4 @@ export const VALUATION_FIELD_OPTIONS: Array<[keyof ReportInputPayload["valuation
   ["landRate", "Harga Tanah (Rp/m2)"],
   ["njopLand", "Nilai NJOP Tanah (Rp)"],
   ["njopBuilding", "Nilai NJOP Bangunan (Rp)"],
-  ["safetyMarginPercent", "Safety Margin (%)"],
-  ["liquidationFactorPercent", "Faktor Likuidasi (%)"],
 ];

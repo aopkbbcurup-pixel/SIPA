@@ -471,6 +471,24 @@ export function ReportFormPage() {
       })),
     }));
   }, [metadata?.parameters.inspectionChecklistTemplate]);
+
+  // Sync Collateral Area to Valuation Input
+  useEffect(() => {
+    const totalLandArea = formData.collateral.reduce((sum, item) => sum + (item.landArea || 0), 0);
+    const totalBuildingArea = formData.collateral.reduce((sum, item) => sum + (item.buildingArea || 0), 0);
+
+    if (totalLandArea !== formData.valuationInput.landArea || totalBuildingArea !== formData.valuationInput.buildingArea) {
+      setFormData((prev) => ({
+        ...prev,
+        valuationInput: {
+          ...prev.valuationInput,
+          landArea: totalLandArea,
+          buildingArea: totalBuildingArea,
+        },
+      }));
+    }
+  }, [formData.collateral, formData.valuationInput.landArea, formData.valuationInput.buildingArea]);
+
   const valuationPreview = useMemo(() => calculateValuation(formData.valuationInput), [formData.valuationInput]);
 
   const handleTitleChange = (value: string) => {
