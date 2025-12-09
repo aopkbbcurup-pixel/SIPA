@@ -177,6 +177,8 @@ const defaultForm: ReportInputPayload = {
     buildingRate: 0,
     njopLand: 0,
     njopBuilding: 0,
+    njopLandPerM2: 0,
+    marketPriceLandPerM2: 0,
     safetyMarginPercent: 0,
     liquidationFactorPercent: 0,
   },
@@ -359,6 +361,7 @@ export function ReportFormPage() {
         category: item.category,
       })),
       valuationInput: {
+        ...defaultForm.valuationInput, // Merge defaults first to ensure structure
         ...report.valuationInput,
       },
       remarks: report.remarks,
@@ -477,17 +480,84 @@ export function ReportFormPage() {
     const totalLandArea = formData.collateral.reduce((sum, item) => sum + (item.landArea || 0), 0);
     const totalBuildingArea = formData.collateral.reduce((sum, item) => sum + (item.buildingArea || 0), 0);
 
-    if (totalLandArea !== formData.valuationInput.landArea || totalBuildingArea !== formData.valuationInput.buildingArea) {
-      setFormData((prev) => ({
+    setFormData((prev) => {
+      if (
+        prev.valuationInput.landArea === totalLandArea &&
+        prev.valuationInput.buildingArea === totalBuildingArea
+      ) {
+        return prev;
+      }
+      return {
         ...prev,
         valuationInput: {
           ...prev.valuationInput,
           landArea: totalLandArea,
           buildingArea: totalBuildingArea,
         },
-      }));
+      };
+    });
+  }, [formData.collateral]);
+
+  // Auto-calculate Market Price Land from Comparables (weighted average for "tanah" category)
+  useEffect(() => {
+    const landComparables = formData.comparables.filter(
+      (c) => c.category === "tanah" && c.landArea > 0 && c.price > 0 && (c.weight ?? 0) > 0
+    );
+
+    if (landComparables.length > 0) {
+      let totalWeightedPrice = 0;
+      let totalWeight = 0;
+
+      for (const comp of landComparables) {
+        const pricePerM2 = comp.price / comp.landArea;
+        const weight = comp.weight ?? 0;
+        totalWeightedPrice += pricePerM2 * weight;
+        totalWeight += weight;
+      }
+
+      if (totalWeight > 0) {
+        const weightedAveragePrice = Math.round(totalWeightedPrice / totalWeight);
+
+        setFormData((prev) => {
+          if (prev.valuationInput.marketPriceLandPerM2 === weightedAveragePrice) {
+            return prev;
+          }
+          return {
+            ...prev,
+            valuationInput: {
+              ...prev.valuationInput,
+              marketPriceLandPerM2: weightedAveragePrice,
+            },
+          };
+        });
+      }
     }
-  }, [formData.collateral, formData.valuationInput.landArea, formData.valuationInput.buildingArea]);
+  }, [formData.comparables]);
+
+  // Auto-calculate Land Rate = Average of (Market Price per m² + NJOP per m²)
+  useEffect(() => {
+    const marketPrice = formData.valuationInput.marketPriceLandPerM2 ?? 0;
+    const njopPrice = formData.valuationInput.njopLandPerM2 ?? 0;
+
+    // Only calculate if at least one value is provided
+    if (marketPrice > 0 || njopPrice > 0) {
+      const count = (marketPrice > 0 ? 1 : 0) + (njopPrice > 0 ? 1 : 0);
+      const averageRate = Math.round((marketPrice + njopPrice) / count);
+
+      setFormData((prev) => {
+        if (prev.valuationInput.landRate === averageRate) {
+          return prev;
+        }
+        return {
+          ...prev,
+          valuationInput: {
+            ...prev.valuationInput,
+            landRate: averageRate,
+          },
+        };
+      });
+    }
+  }, [formData.valuationInput.marketPriceLandPerM2, formData.valuationInput.njopLandPerM2]);
 
   const valuationPreview = useMemo(() => calculateValuation(formData.valuationInput), [formData.valuationInput]);
 

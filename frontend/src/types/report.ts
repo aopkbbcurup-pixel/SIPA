@@ -209,12 +209,16 @@ export interface MarketComparable {
 export interface ValuationInput {
   landArea: number;
   buildingArea: number;
-  landRate: number;
+  landRate: number; // Auto-calculated: average of marketPriceLandPerM2 and njopLandPerM2
   buildingStandardCode: BuildingStandardCode;
   buildingStandardRate: number;
   buildingDepreciationPercent: number;
   buildingRate: number;
-  njopLand?: number;
+  // Land valuation inputs (per m²)
+  marketPriceLandPerM2?: number; // Harga Pasar Tanah per m²
+  njopLandPerM2?: number; // NJOP Tanah per m²
+  // Building NJOP (total value, for reference/comparison)
+  njopLand?: number; // Legacy, keep for backward compatibility
   njopBuilding?: number;
   safetyMarginPercent: number;
   liquidationFactorPercent: number;

@@ -1587,37 +1587,76 @@ export function ReportDetailPage() {
                         ) : null}
                       </div>
                       <div className="rounded-lg border border-slate-200 p-4">
-                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Hasil Perhitungan</h3>
-                        <dl className="mt-3 grid gap-3 text-sm text-slate-700">
-                          <div className="flex justify-between">
-                            <dt>Nilai Pasar</dt>
-                            <dd className="font-semibold text-slate-800">{formatCurrency(valuationBreakdown?.marketValue)}</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt>Nilai Sebelum Safety Margin</dt>
-                            <dd className="font-semibold text-slate-800">
-                              {formatCurrency(valuationBreakdown?.marketValueBeforeSafety)}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt>Deduksi Safety Margin</dt>
-                            <dd className="font-semibold text-slate-800">
-                              {formatCurrency(valuationBreakdown?.totalSafetyDeduction)}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt>Nilai Setelah Safety Margin</dt>
-                            <dd className="font-semibold text-slate-800">
-                              {formatCurrency(valuationBreakdown?.collateralValueAfterSafety)}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt>Nilai Likuidasi</dt>
-                            <dd className="font-semibold text-slate-800">
-                              {formatCurrency(valuationBreakdown?.liquidationValue)}
-                            </dd>
-                          </div>
-                        </dl>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Hasil Perhitungan (v2)</h3>
+                        <div className="mt-3 overflow-x-auto">
+                          <table className="min-w-full divide-y divide-slate-200 text-sm">
+                            <thead className="bg-slate-100">
+                              <tr>
+                                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-600">No</th>
+                                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-600">Nama Agunan</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Volume/Luas (m²)</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Harga Satuan Per meter</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Harga Pasar</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Nilai NJOP</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Nilai Rata-Rata</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Nilai Agunan sebelum Safety margin</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Safety Margin</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Nilai setelah Safety Margin</th>
+                                <th className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-600">Nilai Likuidasi Agunan</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                              <tr>
+                                <td className="px-3 py-2 text-slate-700">1</td>
+                                <td className="px-3 py-2 font-medium text-slate-700">Tanah</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatNumber(report.valuationInput.landArea)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(report.valuationInput.landRate)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                                  {formatCurrency(report.valuationInput.marketPriceLandPerM2 || (report.valuationInput.landArea > 0 ? report.valuationInput.landRate : 0))}
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                                  {formatCurrency(report.valuationInput.njopLandPerM2 || (report.valuationInput.njopLand > 0 && report.valuationInput.landArea > 0 ? report.valuationInput.njopLand / report.valuationInput.landArea : 0))}
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                                  {formatCurrency(valuationBreakdown?.land?.averageValue && report.valuationInput.landArea > 0 ? valuationBreakdown.land.averageValue / report.valuationInput.landArea : undefined)}
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.land?.valueBeforeSafety)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.land?.safetyDeduction)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.land?.valueAfterSafety)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.land?.liquidationValue)}</td>
+                              </tr>
+                              <tr>
+                                <td className="px-3 py-2 text-slate-700">2</td>
+                                <td className="px-3 py-2 font-medium text-slate-700">Bangunan</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatNumber(report.valuationInput.buildingArea)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(report.valuationInput.buildingStandardRate || report.valuationInput.buildingRate)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">-</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                                  {formatCurrency(report.valuationInput.njopBuilding && report.valuationInput.buildingArea > 0 ? report.valuationInput.njopBuilding / report.valuationInput.buildingArea : undefined)}
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                                  {formatCurrency(valuationBreakdown?.building?.averageValue && report.valuationInput.buildingArea > 0 ? valuationBreakdown.building.averageValue / report.valuationInput.buildingArea : undefined)}
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.building?.valueBeforeSafety)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.building?.safetyDeduction)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.building?.valueAfterSafety)}</td>
+                                <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">{formatCurrency(valuationBreakdown?.building?.liquidationValue)}</td>
+                              </tr>
+                              <tr className="bg-slate-50 font-semibold">
+                                <td className="px-3 py-2 text-slate-800" colSpan={2}>Jumlah</td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap"></td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap"></td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap"></td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap"></td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap"></td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap">{formatCurrency(valuationBreakdown?.marketValueBeforeSafety)}</td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap"></td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap">{formatCurrency(valuationBreakdown?.collateralValueAfterSafety)}</td>
+                                <td className="px-3 py-2 text-right text-slate-800 whitespace-nowrap">{formatCurrency(valuationBreakdown?.liquidationValue)}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                     {report.comparables.length > 0 && (

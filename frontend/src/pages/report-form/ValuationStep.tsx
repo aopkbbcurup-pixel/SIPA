@@ -5,10 +5,94 @@ import type {
   ReportInputPayload,
   ValuationResult,
 } from "../../types/report";
-import { VALUATION_FIELD_OPTIONS } from "./constants";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { generateRemarks, predictPrice } from "../../lib/reportApi";
+
+// Helper to format number with thousand separators
+const formatNumber = (value: number | undefined): string => {
+  if (!value || value === 0) return "";
+  return value.toLocaleString("id-ID");
+};
+
+// Helper to parse formatted number input
+const parseFormattedNumber = (value: string): number => {
+  if (!value || value.trim() === "") return 0;
+  const cleaned = value.replace(/\D/g, ""); // Remove all non-digits
+  const parsed = parseInt(cleaned, 10);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+// Currency input component - MOVED OUTSIDE to prevent recreation
+const CurrencyInput = ({
+  label,
+  value,
+  onChange,
+  placeholder = "0",
+  hint,
+  disabled = false,
+  className = ""
+}: {
+  label: string;
+  value: number | undefined;
+  onChange: (value: number) => void;
+  placeholder?: string;
+  hint?: string;
+  disabled?: boolean;
+  className?: string;
+}) => {
+  const [localValue, setLocalValue] = useState(formatNumber(value));
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<number | null>(null);
+
+  // Only sync from parent when user is NOT typing
+  useEffect(() => {
+    if (!isTypingRef.current) {
+      setLocalValue(formatNumber(value));
+    }
+  }, [value]);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+
+    // Mark as typing
+    isTypingRef.current = true;
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Update local display immediately
+    setLocalValue(input);
+
+    // Parse and send to parent
+    const parsed = parseFormattedNumber(input);
+    onChange(parsed);
+
+    // After 500ms of no typing, mark as not typing
+    typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false;
+      // Format the display value
+      setLocalValue(formatNumber(parsed));
+    }, 500);
+  };
+
+  return (
+    <div className={className}>
+      <label className="text-sm font-medium text-slate-600">{label}</label>
+      <input
+        type="text"
+        value={localValue}
+        onChange={handleChange}
+        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-right"
+        placeholder={placeholder}
+        disabled={disabled}
+      />
+      {hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>}
+    </div>
+  );
+};
 
 interface ValuationStepProps {
   formData: ReportInputPayload;
@@ -104,6 +188,7 @@ export function ValuationStep({
               </div>
             ) : (
               <>
+                {/* Building Standard Section */}
                 <div className="md:col-span-2">
                   <label className="text-sm font-medium text-slate-600">Standar Bangunan</label>
                   <select
@@ -118,18 +203,16 @@ export function ValuationStep({
                       </option>
                     ))}
                   </select>
-                  {selectedBuildingStandard ? (
+                  {selectedBuildingStandard && (
                     <ul className="mt-2 list-disc pl-5 text-xs text-slate-500">
                       {selectedBuildingStandard.specification.map((item) => (
                         <li key={item}>{item}</li>
                       ))}
                     </ul>
-                  ) : (
-                    <p className="mt-2 text-xs text-slate-500">
-                      Standar bangunan digunakan untuk menghitung harga bangunan per meter secara otomatis.
-                    </p>
                   )}
                 </div>
+
+                {/* Building Rate Info Row */}
                 <div>
                   <label className="text-sm font-medium text-slate-600">Harga Standar Bangunan (Rp/m²)</label>
                   <input
@@ -147,28 +230,58 @@ export function ValuationStep({
                     value={`${formatPercentValue(formData.valuationInput.buildingDepreciationPercent)} %`}
                     className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
                   />
+                  <p className="text-[10px] text-slate-500 mt-1">*Penyusutan tidak mempengaruhi nilai akhir.</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Harga Bangunan Terkoreksi (Rp/m²)</label>
+
+                {/* Row 1: Luas Tanah | Luas Bangunan */}
+                <CurrencyInput
+                  label="Luas Tanah (m²)"
+                  value={formData.valuationInput.landArea}
+                  onChange={(v) => onUpdateValuationInput("landArea", v)}
+                />
+                <CurrencyInput
+                  label="Luas Bangunan (m²)"
+                  value={formData.valuationInput.buildingArea}
+                  onChange={(v) => onUpdateValuationInput("buildingArea", v)}
+                />
+
+                {/* Row 2: Harga Pasar Tanah (auto, full width) */}
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-slate-600">
+                    Harga Pasar Tanah <span className="text-xs text-blue-600">(dari Pembanding)</span>
+                  </label>
                   <input
                     type="text"
                     readOnly
-                    value={`Rp ${formatCurrencyValue(formData.valuationInput.buildingRate)}`}
-                    className="mt-1 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
+                    value={`Rp ${formatNumber(formData.valuationInput.marketPriceLandPerM2)}`}
+                    className="mt-1 w-full rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-right text-blue-800"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">*Penyusutan tidak mempengaruhi nilai akhir (hanya referensi).</p>
                 </div>
-                {VALUATION_FIELD_OPTIONS.map(([key, label]) => (
-                  <div key={key}>
-                    <label className="text-sm font-medium text-slate-600">{label}</label>
-                    <input
-                      type="number"
-                      value={formData.valuationInput[key]}
-                      onChange={(event) => onUpdateValuationInput(key, Number(event.target.value))}
-                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                    />
+
+                {/* Row 3: Harga Tanah Rata-Rata (auto, full width) */}
+                <div className="md:col-span-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-emerald-800">
+                      Harga Tanah Rata-Rata <span className="text-xs text-emerald-600">(Otomatis)</span>
+                    </label>
+                    <span className="text-lg font-bold text-emerald-800">
+                      Rp {formatNumber(formData.valuationInput.landRate)}
+                    </span>
                   </div>
-                ))}
+                  <p className="text-xs text-emerald-600 mt-1">= (Harga Pasar + NJOP) / 2</p>
+                </div>
+
+                {/* Row 4: NJOP Tanah | NJOP Bangunan (side by side) */}
+                <CurrencyInput
+                  label="NJOP Tanah (Rp/m²)"
+                  value={formData.valuationInput.njopLandPerM2}
+                  onChange={(v) => onUpdateValuationInput("njopLandPerM2", v)}
+                />
+                <CurrencyInput
+                  label="NJOP Bangunan (Rp/m²)"
+                  value={formData.valuationInput.njopBuilding}
+                  onChange={(v) => onUpdateValuationInput("njopBuilding", v)}
+                />
               </>
             )}
 
@@ -296,36 +409,43 @@ export function ValuationStep({
         </div>
 
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-          <h3 className="text-sm font-semibold text-emerald-800">Hasil Perhitungan</h3>
-          <ul className="mt-3 space-y-2 text-sm text-emerald-900">
+          <h3 className="text-sm font-semibold text-emerald-800 mb-3">Hasil Perhitungan</h3>
+          <div className="space-y-3">
             {(formData.valuationInput.assetType === "property" || !formData.valuationInput.assetType) && (
               <>
-                <li className="flex justify-between">
-                  <span>Nilai Tanah</span>
-                  <span className="font-semibold">Rp {valuationPreview.land?.valueBeforeSafety.toLocaleString("id-ID") ?? 0}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Nilai Bangunan</span>
-                  <span className="font-semibold">Rp {valuationPreview.building?.valueBeforeSafety.toLocaleString("id-ID") ?? 0}</span>
-                </li>
-                <hr className="border-emerald-200 my-2" />
+                <div className="flex items-center justify-between py-2 border-b border-emerald-200">
+                  <span className="text-sm text-emerald-700">Nilai Tanah</span>
+                  <span className="text-sm font-bold text-emerald-900 tabular-nums whitespace-nowrap">
+                    Rp {(valuationPreview.land?.valueBeforeSafety ?? 0).toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-emerald-200">
+                  <span className="text-sm text-emerald-700">Nilai Bangunan</span>
+                  <span className="text-sm font-bold text-emerald-900 tabular-nums whitespace-nowrap">
+                    Rp {(valuationPreview.building?.valueBeforeSafety ?? 0).toLocaleString("id-ID")}
+                  </span>
+                </div>
               </>
             )}
-            <li className="flex justify-between">
-              <span>Nilai Pasar Total</span>
-              <span className="font-semibold">Rp {valuationPreview.marketValue.toLocaleString("id-ID")}</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Setelah Safety Margin</span>
-              <span className="font-semibold">
+            <div className="flex items-center justify-between py-2 bg-emerald-100 -mx-4 px-4 rounded-md">
+              <span className="text-sm font-semibold text-emerald-800">Nilai Pasar Total</span>
+              <span className="text-base font-bold text-emerald-900 tabular-nums whitespace-nowrap">
+                Rp {valuationPreview.marketValue.toLocaleString("id-ID")}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-2 border-b border-emerald-200">
+              <span className="text-sm text-emerald-700">Setelah Safety Margin</span>
+              <span className="text-sm font-bold text-emerald-900 tabular-nums whitespace-nowrap">
                 Rp {valuationPreview.collateralValueAfterSafety.toLocaleString("id-ID")}
               </span>
-            </li>
-            <li className="flex justify-between">
-              <span>Nilai Likuidasi</span>
-              <span className="font-semibold">Rp {valuationPreview.liquidationValue.toLocaleString("id-ID")}</span>
-            </li>
-          </ul>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-emerald-700">Nilai Likuidasi</span>
+              <span className="text-sm font-bold text-emerald-900 tabular-nums whitespace-nowrap">
+                Rp {valuationPreview.liquidationValue.toLocaleString("id-ID")}
+              </span>
+            </div>
+          </div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
           <h4 className="font-semibold text-slate-700">Ringkasan</h4>
