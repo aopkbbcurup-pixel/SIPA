@@ -298,8 +298,21 @@ export function ValuationStep({
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
           <h3 className="text-sm font-semibold text-emerald-800">Hasil Perhitungan</h3>
           <ul className="mt-3 space-y-2 text-sm text-emerald-900">
+            {(formData.valuationInput.assetType === "property" || !formData.valuationInput.assetType) && (
+              <>
+                <li className="flex justify-between">
+                  <span>Nilai Tanah</span>
+                  <span className="font-semibold">Rp {valuationPreview.land?.valueBeforeSafety.toLocaleString("id-ID") ?? 0}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Nilai Bangunan</span>
+                  <span className="font-semibold">Rp {valuationPreview.building?.valueBeforeSafety.toLocaleString("id-ID") ?? 0}</span>
+                </li>
+                <hr className="border-emerald-200 my-2" />
+              </>
+            )}
             <li className="flex justify-between">
-              <span>Nilai Pasar</span>
+              <span>Nilai Pasar Total</span>
               <span className="font-semibold">Rp {valuationPreview.marketValue.toLocaleString("id-ID")}</span>
             </li>
             <li className="flex justify-between">

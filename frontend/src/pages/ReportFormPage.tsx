@@ -52,7 +52,8 @@ function applyValuationUsingMetadata(
       buildingStandardCode: selectedStandard.code,
       buildingStandardRate: valuation.standardRate,
       buildingDepreciationPercent: valuation.depreciationPercent,
-      buildingRate: valuation.adjustedRate,
+      // Force buildingRate to be standardRate (ignoring depreciation)
+      buildingRate: valuation.standardRate,
     },
   };
 }
@@ -202,9 +203,8 @@ function calculateValuation(input: ReportInputPayload["valuationInput"]): Valuat
   // Logic for Property (Land & Building)
   const landValue = Math.round(input.landArea * input.landRate);
 
-  // Use buildingStandardRate (base) to ignore depreciation, as per new requirement
-  const appliedBuildingRate = input.buildingStandardRate;
-  const buildingValue = Math.round(input.buildingArea * appliedBuildingRate);
+  // buildingRate is already forced to be standardRate (base) in applyValuationUsingMetadata
+  const buildingValue = Math.round(input.buildingArea * input.buildingRate);
 
   const landSafetyDeduction = 0;
   const buildingSafetyDeduction = Math.round((buildingValue * input.safetyMarginPercent) / 100);
@@ -229,7 +229,7 @@ function calculateValuation(input: ReportInputPayload["valuationInput"]): Valuat
   const landAverageValue = computeAverageValue([landValue, Math.round(input.landArea * input.landRate), input.njopLand]);
   const buildingAverageValue = computeAverageValue([
     buildingValue,
-    Math.round(input.buildingArea * appliedBuildingRate),
+    Math.round(input.buildingArea * input.buildingRate),
     input.njopBuilding,
   ]);
   const landComponent: ValuationResult["land"] = {
