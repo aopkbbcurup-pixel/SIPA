@@ -367,7 +367,12 @@ export function ReportFormPage() {
         njopLandPerM2: report.valuationInput.njopLandPerM2 ||
           (report.valuationInput.njopLand && report.valuationInput.landArea > 0
             ? Math.round(report.valuationInput.njopLand / report.valuationInput.landArea)
-            : undefined),
+            : 0),
+        // Fallback: If njopBuildingPerM2 is missing, try to derive from Total NJOP
+        njopBuildingPerM2: report.valuationInput.njopBuildingPerM2 ||
+          (report.valuationInput.njopBuilding && report.valuationInput.buildingArea > 0
+            ? Math.round(report.valuationInput.njopBuilding / report.valuationInput.buildingArea)
+            : 0),
       },
       remarks: report.remarks,
     } as ReportInputPayload;
@@ -563,6 +568,42 @@ export function ReportFormPage() {
       });
     }
   }, [formData.valuationInput.marketPriceLandPerM2, formData.valuationInput.njopLandPerM2]);
+
+  // Sync NJOP Land Total = PerM2 * Land Area
+  useEffect(() => {
+    const perM2 = formData.valuationInput.njopLandPerM2 ?? 0;
+    const area = formData.valuationInput.landArea ?? 0;
+    const total = Math.round(perM2 * area);
+
+    setFormData((prev) => {
+      if (prev.valuationInput.njopLand === total) return prev;
+      return {
+        ...prev,
+        valuationInput: {
+          ...prev.valuationInput,
+          njopLand: total,
+        },
+      };
+    });
+  }, [formData.valuationInput.njopLandPerM2, formData.valuationInput.landArea]);
+
+  // Sync NJOP Building Total = PerM2 * Building Area
+  useEffect(() => {
+    const perM2 = formData.valuationInput.njopBuildingPerM2 ?? 0;
+    const area = formData.valuationInput.buildingArea ?? 0;
+    const total = Math.round(perM2 * area);
+
+    setFormData((prev) => {
+      if (prev.valuationInput.njopBuilding === total) return prev;
+      return {
+        ...prev,
+        valuationInput: {
+          ...prev.valuationInput,
+          njopBuilding: total,
+        },
+      };
+    });
+  }, [formData.valuationInput.njopBuildingPerM2, formData.valuationInput.buildingArea]);
 
   const valuationPreview = useMemo(() => calculateValuation(formData.valuationInput), [formData.valuationInput]);
 

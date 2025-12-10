@@ -217,6 +217,7 @@ export interface ValuationInput {
   // Land valuation inputs (per m²)
   marketPriceLandPerM2?: number; // Harga Pasar Tanah per m²
   njopLandPerM2?: number; // NJOP Tanah per m²
+  njopBuildingPerM2?: number; // NJOP Bangunan per m²
   // Building NJOP (total value, for reference/comparison)
   njopLand?: number; // Legacy, keep for backward compatibility
   njopBuilding?: number;

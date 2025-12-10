@@ -212,6 +212,7 @@ export interface ValuationInput {
   njopLand?: number;
   njopBuilding?: number;
   njopLandPerM2?: number;
+  njopBuildingPerM2?: number;
   marketPriceLandPerM2?: number;
   safetyMarginPercent: number;
   liquidationFactorPercent: number;

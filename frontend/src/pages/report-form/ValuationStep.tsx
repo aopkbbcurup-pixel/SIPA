@@ -6,7 +6,8 @@ import type {
   ValuationResult,
 } from "../../types/report";
 
-import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { useState, useEffect, useRef } from "react";
+import type { ChangeEvent } from "react";
 import { generateRemarks, predictPrice } from "../../lib/reportApi";
 
 // Helper to format number with thousand separators
@@ -279,8 +280,8 @@ export function ValuationStep({
                 />
                 <CurrencyInput
                   label="NJOP Bangunan (Rp/m²)"
-                  value={formData.valuationInput.njopBuilding}
-                  onChange={(v) => onUpdateValuationInput("njopBuilding", v)}
+                  value={formData.valuationInput.njopBuildingPerM2}
+                  onChange={(v) => onUpdateValuationInput("njopBuildingPerM2", v)}
                 />
               </>
             )}
