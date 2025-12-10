@@ -364,15 +364,36 @@ export function ReportFormPage() {
         ...defaultForm.valuationInput,
         ...report.valuationInput,
         // Fallback: If njopLandPerM2 is missing (legacy data), try to derive from Total NJOP
+        // Fallback: If njopLandPerM2 is missing (legacy data), try to derive from Total NJOP
+        // Heuristic: If calculated value is unreasonably low (< 10000) but Total is > 10000, 
+        // assume Total field actually holds the PerM2 value (legacy data error).
         njopLandPerM2: report.valuationInput.njopLandPerM2 ||
-          (report.valuationInput.njopLand && report.valuationInput.landArea > 0
-            ? Math.round(report.valuationInput.njopLand / report.valuationInput.landArea)
-            : 0),
+          (() => {
+            const total = report.valuationInput.njopLand;
+            const area = report.valuationInput.landArea;
+            if (!total || !area) return 0;
+
+            const calculated = Math.round(total / area);
+            if (calculated < 10000 && total >= 10000) {
+              return total;
+            }
+            return calculated;
+          })(),
+
         // Fallback: If njopBuildingPerM2 is missing, try to derive from Total NJOP
+        // Same heuristic for building
         njopBuildingPerM2: report.valuationInput.njopBuildingPerM2 ||
-          (report.valuationInput.njopBuilding && report.valuationInput.buildingArea > 0
-            ? Math.round(report.valuationInput.njopBuilding / report.valuationInput.buildingArea)
-            : 0),
+          (() => {
+            const total = report.valuationInput.njopBuilding;
+            const area = report.valuationInput.buildingArea;
+            if (!total || !area) return 0;
+
+            const calculated = Math.round(total / area);
+            if (calculated < 10000 && total >= 10000) {
+              return total;
+            }
+            return calculated;
+          })(),
       },
       remarks: report.remarks,
     } as ReportInputPayload;
