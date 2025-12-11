@@ -363,37 +363,74 @@ export function ReportFormPage() {
       valuationInput: {
         ...defaultForm.valuationInput,
         ...report.valuationInput,
-        // Fallback: If njopLandPerM2 is missing (legacy data), try to derive from Total NJOP
-        // Fallback: If njopLandPerM2 is missing (legacy data), try to derive from Total NJOP
-        // Heuristic: If calculated value is unreasonably low (< 10000) but Total is > 10000, 
-        // assume Total field actually holds the PerM2 value (legacy data error).
-        njopLandPerM2: report.valuationInput.njopLandPerM2 ||
-          (() => {
-            const total = report.valuationInput.njopLand;
-            const area = report.valuationInput.landArea;
-            if (!total || !area) return 0;
+        // Smart NJOP validation and correction
+        // Handle cases where data might be corrupted or swapped
+        njopLandPerM2: (() => {
+          const savedPerM2 = report.valuationInput.njopLandPerM2;
+          const savedTotal = report.valuationInput.njopLand;
+          const area = report.valuationInput.landArea;
 
-            const calculated = Math.round(total / area);
-            if (calculated < 10000 && total >= 10000) {
-              return total;
+          // If we have a valid saved PerM2 value that makes sense, use it
+          if (savedPerM2 && savedPerM2 >= 10000) {
+            return savedPerM2;
+          }
+
+          // If no area, can't validate - return what we have or 0
+          if (!area || area === 0) {
+            return savedPerM2 || 0;
+          }
+
+          // Calculate what PerM2 should be based on Total
+          const calculatedPerM2 = savedTotal && savedTotal > 0 ? Math.round(savedTotal / area) : 0;
+
+          // Case 1: savedPerM2 is suspiciously low (< 10k) but savedTotal looks like a valid per-m2 price
+          if (savedPerM2 && savedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
+            // Data is likely swapped - use savedTotal as the per-m2 value
+            return savedTotal;
+          }
+
+          // Case 2: savedPerM2 doesn't exist or is 0, but we can calculate from Total
+          if (!savedPerM2 || savedPerM2 === 0) {
+            // If calculated is too low but Total looks valid, assume Total is actually PerM2
+            if (calculatedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
+              return savedTotal;
             }
-            return calculated;
-          })(),
+            return calculatedPerM2;
+          }
 
-        // Fallback: If njopBuildingPerM2 is missing, try to derive from Total NJOP
+          // Default: use the saved value
+          return savedPerM2;
+        })(),
+
         // Same heuristic for building
-        njopBuildingPerM2: report.valuationInput.njopBuildingPerM2 ||
-          (() => {
-            const total = report.valuationInput.njopBuilding;
-            const area = report.valuationInput.buildingArea;
-            if (!total || !area) return 0;
+        njopBuildingPerM2: (() => {
+          const savedPerM2 = report.valuationInput.njopBuildingPerM2;
+          const savedTotal = report.valuationInput.njopBuilding;
+          const area = report.valuationInput.buildingArea;
 
-            const calculated = Math.round(total / area);
-            if (calculated < 10000 && total >= 10000) {
-              return total;
+          if (savedPerM2 && savedPerM2 >= 10000) {
+            return savedPerM2;
+          }
+
+          if (!area || area === 0) {
+            return savedPerM2 || 0;
+          }
+
+          const calculatedPerM2 = savedTotal && savedTotal > 0 ? Math.round(savedTotal / area) : 0;
+
+          if (savedPerM2 && savedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
+            return savedTotal;
+          }
+
+          if (!savedPerM2 || savedPerM2 === 0) {
+            if (calculatedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
+              return savedTotal;
             }
-            return calculated;
-          })(),
+            return calculatedPerM2;
+          }
+
+          return savedPerM2;
+        })(),
       },
       remarks: report.remarks,
     } as ReportInputPayload;
