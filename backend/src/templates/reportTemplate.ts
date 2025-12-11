@@ -206,7 +206,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
     )
     .join("");
 
-  const valuationInput: any = report.valuationInput;
+  const valuationInput = report.valuationInput;
   const valuationResult = report.valuationResult;
 
   const fallbackLandValue = Math.round(valuationInput.landArea * valuationInput.landRate);

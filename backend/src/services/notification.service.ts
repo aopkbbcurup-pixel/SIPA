@@ -14,13 +14,13 @@ class NotificationService {
         });
     }
 
-    notify(event: string, data: any) {
+    notify(event: string, data: unknown) {
         if (this.io) {
             this.io.emit(event, data);
         }
     }
 
-    notifyUser(userId: string, event: string, data: any) {
+    notifyUser(userId: string, event: string, data: unknown) {
         // In a real app, we would map userIds to socketIds
         // For now, we'll just broadcast or use a room if we implemented auth on socket
         if (this.io) {
