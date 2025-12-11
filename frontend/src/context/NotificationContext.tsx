@@ -37,11 +37,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         });
 
         newSocket.on("connect", () => {
-            console.log("Socket connected");
+            // Socket connected
         });
 
         newSocket.on("notification", (notification: Notification) => {
-            console.log("Notification received:", notification);
             setNotifications((prev) => [notification, ...prev]);
         });
 

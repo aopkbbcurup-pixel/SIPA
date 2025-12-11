@@ -858,13 +858,6 @@ export function ReportFormPage() {
       };
       const preparedPayload = applyBuildingValuation(payload);
 
-      console.log('💾 [SAVE DEBUG] Saving NJOP values:', {
-        njopLandPerM2: preparedPayload.valuationInput.njopLandPerM2,
-        njopLand: preparedPayload.valuationInput.njopLand,
-        njopBuildingPerM2: preparedPayload.valuationInput.njopBuildingPerM2,
-        njopBuilding: preparedPayload.valuationInput.njopBuilding
-      });
-
       if (isEditing && reportId) {
         const updatedReport = await updateReport(reportId, preparedPayload);
 
