@@ -177,7 +177,6 @@ const defaultForm: ReportInputPayload = {
     buildingRate: 0,
     njopLand: 0,
     njopBuilding: 0,
-    njopLandPerM2: 0,
     marketPriceLandPerM2: 0,
     safetyMarginPercent: 0,
     liquidationFactorPercent: 0,
