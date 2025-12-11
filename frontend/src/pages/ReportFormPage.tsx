@@ -362,11 +362,24 @@ export function ReportFormPage() {
       valuationInput: {
         ...defaultForm.valuationInput,
         ...report.valuationInput,
-        // FIX: Handle Firestore data where njopLandPerM2 is undefined
-        // If njopLand looks like a per-m2 value (>= 10k), use it as njopLandPerM2
-        njopLandPerM2: report.valuationInput.njopLandPerM2 ??
-          (report.valuationInput.njopLand && report.valuationInput.njopLand >= 10000
-            ? report.valuationInput.njopLand
+        // SMART FIX: Handle inconsistent Firestore data for Land NJOP
+        // Detection: if njopLand/area < 10k but njopLand >= 10k, it's already per-m2
+        njopLandPerM2: report.valuationInput.njopLandPerM2 ?? (() => {
+          const total = report.valuationInput.njopLand;
+          const area = report.valuationInput.landArea;
+          if (!total || !area || area === 0) return 0;
+
+          const calculated = Math.round(total / area);
+          // If calculated too small but total looks valid, use total as per-m2
+          if (calculated < 10000 && total >= 10000) {
+            return total;
+          }
+          return calculated;
+        })(),
+        // Same calculation for building
+        njopBuildingPerM2: report.valuationInput.njopBuildingPerM2 ??
+          (report.valuationInput.njopBuilding && report.valuationInput.buildingArea > 0
+            ? Math.round(report.valuationInput.njopBuilding / report.valuationInput.buildingArea)
             : 0),
       },
       remarks: report.remarks,
@@ -567,23 +580,8 @@ export function ReportFormPage() {
   // REMOVED: Auto-sync was causing njopLand to be recalculated, breaking user input
   // Users will manage njopLandPerM2 directly, njopLand will be calculated only when needed
 
-  // Sync NJOP Building Total = PerM2 * Building Area
-  useEffect(() => {
-    const perM2 = formData.valuationInput.njopBuildingPerM2 ?? 0;
-    const area = formData.valuationInput.buildingArea ?? 0;
-    const total = Math.round(perM2 * area);
-
-    setFormData((prev) => {
-      if (prev.valuationInput.njopBuilding === total) return prev;
-      return {
-        ...prev,
-        valuationInput: {
-          ...prev.valuationInput,
-          njopBuilding: total,
-        },
-      };
-    });
-  }, [formData.valuationInput.njopBuildingPerM2, formData.valuationInput.buildingArea]);
+  // REMOVED: Auto-sync for building - same reason as land
+  // Users manage njopBuildingPerM2 directly
 
   const valuationPreview = useMemo(() => calculateValuation(formData.valuationInput), [formData.valuationInput]);
 

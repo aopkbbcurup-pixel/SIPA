@@ -725,7 +725,7 @@ export function renderReportHtml(report: Report, options?: { attachments?: Attac
                 <td>${formatNumber(valuationInput.buildingArea, " m<sup>2</sup>")}</td>
                 <td>${formatCurrency(valuationInput.buildingStandardRate || valuationInput.buildingRate)}</td>
                 <td>-</td>
-                <td>${formatCurrency(valuationInput.njopBuilding || (valuationInput.njopBuilding && valuationInput.buildingArea > 0 ? valuationInput.njopBuilding / valuationInput.buildingArea : 0))}</td>
+                <td>${formatCurrency(valuationInput.njopBuildingPerM2 || (valuationInput.njopBuilding && valuationInput.buildingArea > 0 ? valuationInput.njopBuilding / valuationInput.buildingArea : 0))}</td>
                 <td>${formatCurrency(((valuationInput.buildingStandardRate || valuationInput.buildingRate) + (valuationInput.njopBuilding || 0)) / 2)}</td>
                 <td>${formatCurrency(buildingValue)}</td>
                 <td>${formatCurrency(buildingSafetyMarginValue)}</td>
