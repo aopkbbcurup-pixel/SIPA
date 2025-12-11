@@ -564,31 +564,8 @@ export function ReportFormPage() {
     }
   }, [formData.valuationInput.marketPriceLandPerM2, formData.valuationInput.njopLandPerM2]);
 
-  // Sync NJOP Land Total = PerM2 * Land Area
-  useEffect(() => {
-    const perM2 = formData.valuationInput.njopLandPerM2 ?? 0;
-    const area = formData.valuationInput.landArea ?? 0;
-    const total = Math.round(perM2 * area);
-
-    console.log('🔄 [SYNC DEBUG] NJOP Land Total sync:', {
-      njopLandPerM2: perM2,
-      landArea: area,
-      calculatedTotal: total,
-      currentTotal: formData.valuationInput.njopLand
-    });
-
-    setFormData((prev) => {
-      if (prev.valuationInput.njopLand === total) return prev;
-      console.log('💾 [SYNC DEBUG] Updating njopLand from', prev.valuationInput.njopLand, 'to', total);
-      return {
-        ...prev,
-        valuationInput: {
-          ...prev.valuationInput,
-          njopLand: total,
-        },
-      };
-    });
-  }, [formData.valuationInput.njopLandPerM2, formData.valuationInput.landArea]);
+  // REMOVED: Auto-sync was causing njopLand to be recalculated, breaking user input
+  // Users will manage njopLandPerM2 directly, njopLand will be calculated only when needed
 
   // Sync NJOP Building Total = PerM2 * Building Area
   useEffect(() => {
