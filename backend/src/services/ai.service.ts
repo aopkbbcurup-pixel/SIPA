@@ -169,6 +169,7 @@ Demikian laporan penilaian ini dibuat untuk digunakan sebagaimana mestinya.`;
             return {
                 type: "PBB",
                 number: "32.73.120.001.000.0000.0",
+                issueDate: new Date().toISOString().slice(0, 10),
                 year: "2024",
                 nop: "32.73.120.001.000.0000.0"
             };
