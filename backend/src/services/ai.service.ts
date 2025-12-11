@@ -41,60 +41,74 @@ Demikian laporan penilaian ini dibuat untuk digunakan sebagaimana mestinya.`;
             return hash / 233280;
         };
 
-        // 2. Base Rates (Conservative Defaults)
-        // Land: 2M - 8M per m2 (depending on "random" location factor if not specified)
-        // Building: 2.5M - 4.5M per m2
-        let landRate = 2000000 + (pseudoRandom() * 6000000);
-        let buildingRate = 2500000 + (pseudoRandom() * 2000000);
+        // 2. Use NJOP as PRIMARY Baseline (Most Reliable)
+        let landRate = 0;
+        let buildingRate = 0;
+        let confidence = 0.5;
 
-        // 3. Use NJOP as Baseline if available (Strong Signal)
-        if (report.valuationInput?.njopLand && report.valuationInput.njopLand > 0) {
-            // Market value is usually 1.2x - 2.5x NJOP depending on area
-            const marketFactor = 1.3 + (pseudoRandom() * 1.0);
-            landRate = report.valuationInput.njopLand * marketFactor;
+        if (report.valuationInput?.njopLandPerM2 && report.valuationInput.njopLandPerM2 > 0) {
+            // Market value is typically 0.8x - 1.3x NJOP (more conservative)
+            const marketFactor = 0.8 + (pseudoRandom() * 0.5);
+            landRate = report.valuationInput.njopLandPerM2 * marketFactor;
+            confidence += 0.2;
+        } else if (report.valuationInput?.njopLand && report.valuationInput.njopLand > 0) {
+            // Fallback to total NJOP if per-m2 not available
+            const landArea = report.valuationInput?.landArea || 1;
+            const njopPerM2 = report.valuationInput.njopLand / landArea;
+            const marketFactor = 0.8 + (pseudoRandom() * 0.5);
+            landRate = njopPerM2 * marketFactor;
+            confidence += 0.15;
+        } else {
+            // Conservative default if no NJOP (much lower than before)
+            landRate = 300000 + (pseudoRandom() * 700000); // 300k-1M per m2
         }
 
-        if (report.valuationInput?.njopBuilding && report.valuationInput.njopBuilding > 0) {
-            const marketFactor = 1.1 + (pseudoRandom() * 0.5);
-            buildingRate = report.valuationInput.njopBuilding * marketFactor;
+        if (report.valuationInput?.njopBuildingPerM2 && report.valuationInput.njopBuildingPerM2 > 0) {
+            // Building market value closer to NJOP
+            const marketFactor = 0.9 + (pseudoRandom() * 0.3);
+            buildingRate = report.valuationInput.njopBuildingPerM2 * marketFactor;
+            confidence += 0.2;
+        } else if (report.valuationInput?.njopBuilding && report.valuationInput.njopBuilding > 0) {
+            // Fallback to total NJOP
+            const buildingArea = report.valuationInput?.buildingArea || 1;
+            const njopPerM2 = report.valuationInput.njopBuilding / buildingArea;
+            const marketFactor = 0.9 + (pseudoRandom() * 0.3);
+            buildingRate = njopPerM2 * marketFactor;
+            confidence += 0.15;
+        } else {
+            // Conservative default if no NJOP
+            buildingRate = 500000 + (pseudoRandom() * 1000000); // 500k-1.5M per m2
         }
 
-        // 4. Adjustments based on Keywords (Heuristics)
+        // 3. Minor Adjustments based on Keywords (More Conservative)
         const address = (report.collateral?.[0]?.address || "").toLowerCase();
         const condition = (report.technical?.conditionNotes || "").toLowerCase();
-        const access = (report.technical?.utilities?.roadAccess || "").toLowerCase();
 
-        // Location Boosts
-        if (address.includes("jakarta") || address.includes("pusat")) landRate *= 1.5;
-        if (address.includes("selatan") || address.includes("barat")) landRate *= 1.3;
-        if (address.includes("komplek") || address.includes("perumahan")) landRate *= 1.2;
-        if (address.includes("desa") || address.includes("kampung")) landRate *= 0.8;
-
-        // Condition Adjustments
-        if (condition.includes("mewah") || condition.includes("baru") || condition.includes("terawat")) {
-            buildingRate *= 1.2;
-        } else if (condition.includes("rusak") || condition.includes("jelek") || condition.includes("tua")) {
-            buildingRate *= 0.7;
+        // Location Adjustments (reduced multipliers)
+        if (address.includes("jakarta") || address.includes("pusat")) {
+            landRate *= 1.15;
+        } else if (address.includes("selatan") || address.includes("barat")) {
+            landRate *= 1.08;
+        } else if (address.includes("desa") || address.includes("kampung")) {
+            landRate *= 0.9;
         }
 
-        // Access Adjustments
-        if (access.includes("mobil")) landRate *= 1.1;
-        if (access.includes("motor") || access.includes("gang")) landRate *= 0.8;
+        // Condition Adjustments (minimal impact)
+        if (condition.includes("mewah") || condition.includes("baru")) {
+            buildingRate *= 1.1;
+        } else if (condition.includes("rusak") || condition.includes("jelek")) {
+            buildingRate *= 0.85;
+        }
 
-        // 5. Calculate Total
+        // 4. Calculate Total
         const landArea = report.valuationInput?.landArea || 0;
         const buildingArea = report.valuationInput?.buildingArea || 0;
 
         const estimatedValue = Math.round((landArea * landRate) + (buildingArea * buildingRate));
 
-        // 6. Range & Confidence
-        // Tighter range for better precision illusion
-        const min = Math.round(estimatedValue * 0.92);
-        const max = Math.round(estimatedValue * 1.08);
-
-        // Confidence increases if we had NJOP data
-        let confidence = 0.75;
-        if (report.valuationInput?.njopLand) confidence += 0.15;
+        // 5. Range (±5% for tighter prediction)
+        const min = Math.round(estimatedValue * 0.95);
+        const max = Math.round(estimatedValue * 1.05);
 
         return { min, max, confidence };
     }
