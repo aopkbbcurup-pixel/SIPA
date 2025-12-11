@@ -369,22 +369,32 @@ export function ReportFormPage() {
           const savedTotal = report.valuationInput.njopLand;
           const area = report.valuationInput.landArea;
 
+          console.log('🔍 [NJOP DEBUG] Loading from database:', {
+            njopLandPerM2: savedPerM2,
+            njopLand: savedTotal,
+            landArea: area
+          });
+
           // If we have a valid saved PerM2 value that makes sense, use it
           if (savedPerM2 && savedPerM2 >= 10000) {
+            console.log('✅ [NJOP DEBUG] Using valid savedPerM2:', savedPerM2);
             return savedPerM2;
           }
 
           // If no area, can't validate - return what we have or 0
           if (!area || area === 0) {
+            console.log('⚠️ [NJOP DEBUG] No area, returning:', savedPerM2 || 0);
             return savedPerM2 || 0;
           }
 
           // Calculate what PerM2 should be based on Total
           const calculatedPerM2 = savedTotal && savedTotal > 0 ? Math.round(savedTotal / area) : 0;
+          console.log('🧮 [NJOP DEBUG] Calculated PerM2 from Total:', calculatedPerM2);
 
           // Case 1: savedPerM2 is suspiciously low (< 10k) but savedTotal looks like a valid per-m2 price
           if (savedPerM2 && savedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
             // Data is likely swapped - use savedTotal as the per-m2 value
+            console.log('🔄 [NJOP DEBUG] SWAP DETECTED! Using savedTotal as PerM2:', savedTotal);
             return savedTotal;
           }
 
@@ -392,12 +402,15 @@ export function ReportFormPage() {
           if (!savedPerM2 || savedPerM2 === 0) {
             // If calculated is too low but Total looks valid, assume Total is actually PerM2
             if (calculatedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
+              console.log('🔄 [NJOP DEBUG] Calculated too low, using savedTotal:', savedTotal);
               return savedTotal;
             }
+            console.log('📊 [NJOP DEBUG] Using calculated PerM2:', calculatedPerM2);
             return calculatedPerM2;
           }
 
           // Default: use the saved value
+          console.log('📋 [NJOP DEBUG] Using default savedPerM2:', savedPerM2);
           return savedPerM2;
         })(),
 
@@ -632,8 +645,16 @@ export function ReportFormPage() {
     const area = formData.valuationInput.landArea ?? 0;
     const total = Math.round(perM2 * area);
 
+    console.log('🔄 [SYNC DEBUG] NJOP Land Total sync:', {
+      njopLandPerM2: perM2,
+      landArea: area,
+      calculatedTotal: total,
+      currentTotal: formData.valuationInput.njopLand
+    });
+
     setFormData((prev) => {
       if (prev.valuationInput.njopLand === total) return prev;
+      console.log('💾 [SYNC DEBUG] Updating njopLand from', prev.valuationInput.njopLand, 'to', total);
       return {
         ...prev,
         valuationInput: {
@@ -936,6 +957,14 @@ export function ReportFormPage() {
         },
       };
       const preparedPayload = applyBuildingValuation(payload);
+
+      console.log('💾 [SAVE DEBUG] Saving NJOP values:', {
+        njopLandPerM2: preparedPayload.valuationInput.njopLandPerM2,
+        njopLand: preparedPayload.valuationInput.njopLand,
+        njopBuildingPerM2: preparedPayload.valuationInput.njopBuildingPerM2,
+        njopBuilding: preparedPayload.valuationInput.njopBuilding
+      });
+
       if (isEditing && reportId) {
         const updatedReport = await updateReport(reportId, preparedPayload);
 
