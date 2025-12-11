@@ -34,6 +34,7 @@ import { mergeInspectionChecklist } from "../constants/inspectionChecklist";
 import { NotFoundError, UnauthorizedError } from "../utils/errors";
 import { notificationService } from "./notification.service";
 import ExcelJS from "exceljs";
+import { validateValuationInput } from "../utils/validation";
 
 const MAX_TOTAL_ATTACHMENT_SIZE = 100 * 1024 * 1024; // 100 MB
 const COMPARABLE_WEIGHT_TARGET = 100;
@@ -788,6 +789,13 @@ export class ReportService {
     const collateral = normaliseCollateral(input.collateral);
     const comparables = normaliseComparables(input.comparables);
     const comparableAnalysis = computeComparableAnalysis(comparables);
+
+    // Validate valuation input
+    const validationErrors = validateValuationInput(valuationInput);
+    if (validationErrors.length > 0) {
+      throw new Error(validationErrors.join('; '));
+    }
+
     const valuationResult = {
       ...calculateValuation(valuationInput),
       comparablesAnalysis: comparableAnalysis,
