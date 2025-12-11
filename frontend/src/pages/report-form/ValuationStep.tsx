@@ -257,11 +257,15 @@ export function ValuationStep({
                   label="Luas Tanah (m²)"
                   value={formData.valuationInput.landArea}
                   onChange={(v) => onUpdateValuationInput("landArea", v)}
+                  min={1}
+                  hint="Luas total tanah dalam meter persegi"
                 />
                 <CurrencyInput
                   label="Luas Bangunan (m²)"
                   value={formData.valuationInput.buildingArea}
                   onChange={(v) => onUpdateValuationInput("buildingArea", v)}
+                  min={1}
+                  hint="Luas total bangunan dalam meter persegi"
                 />
 
                 {/* Row 2: Harga Pasar Tanah (auto, full width) */}
