@@ -1,4 +1,5 @@
 import { Report } from "../types/domain";
+import { ExtractedDocumentData, BuildingAnalysisResult } from "../types/ai";
 
 export class AiService {
     async generateReportRemarks(report: Partial<Report>): Promise<string> {
@@ -138,7 +139,7 @@ Demikian laporan penilaian ini dibuat untuk digunakan sebagaimana mestinya.`;
         return "Maaf, saya tidak menemukan informasi spesifik terkait pertanyaan Anda dalam data laporan yang tersedia. Coba tanyakan tentang 'jumlah laporan', 'laporan terbaru', atau nama nasabah spesifik.";
     }
 
-    async extractDocumentData(file: Express.Multer.File): Promise<any> {
+    async extractDocumentData(file: Express.Multer.File): Promise<ExtractedDocumentData> {
         // Simulate OCR processing delay
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -181,7 +182,7 @@ Demikian laporan penilaian ini dibuat untuk digunakan sebagaimana mestinya.`;
         };
     }
 
-    async analyzeImage(file: Express.Multer.File): Promise<any> {
+    async analyzeImage(file: Express.Multer.File): Promise<BuildingAnalysisResult> {
         // Simulate CV processing delay
         await new Promise((resolve) => setTimeout(resolve, 2500));
 
