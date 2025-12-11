@@ -335,18 +335,34 @@ export function ValuationStep({
                   <input
                     type="number"
                     value={formData.valuationInput.safetyMarginPercent}
-                    onChange={(e) => onUpdateValuationInput("safetyMarginPercent", Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (val >= 0 && val <= 100) {
+                        onUpdateValuationInput("safetyMarginPercent", val);
+                      }
+                    }}
+                    min="0"
+                    max="100"
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                   />
+                  <p className="text-xs text-slate-500 mt-1">Persentase pengurangan nilai (0-100%)</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-slate-600">Faktor Likuidasi (%)</label>
                   <input
                     type="number"
                     value={formData.valuationInput.liquidationFactorPercent}
-                    onChange={(e) => onUpdateValuationInput("liquidationFactorPercent", Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (val >= 0 && val <= 100) {
+                        onUpdateValuationInput("liquidationFactorPercent", val);
+                      }
+                    }}
+                    min="0"
+                    max="100"
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                   />
+                  <p className="text-xs text-slate-500 mt-1">Persentase nilai likuidasi (0-100%)</p>
                 </div>
               </div>
             </div>
