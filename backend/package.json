@@ -13,7 +13,9 @@
     "test": "vitest run",
     "migrate": "ts-node-dev src/scripts/migrate-json-to-mongo.ts",
     "migrate:prod": "node dist/scripts/migrate-json-to-mongo.js",
-    "seed:firestore": "ts-node-dev src/scripts/seed-firestore.ts"
+    "seed:firestore": "ts-node-dev src/scripts/seed-firestore.ts",
+    "fix-njop": "ts-node-dev src/scripts/fix-njop-values.ts",
+    "fix-njop:prod": "node dist/scripts/fix-njop-values.js"
   },
   "keywords": [],
   "author": "",

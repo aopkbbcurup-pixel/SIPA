@@ -362,87 +362,12 @@ export function ReportFormPage() {
       valuationInput: {
         ...defaultForm.valuationInput,
         ...report.valuationInput,
-        // Smart NJOP validation and correction
-        // Handle cases where data might be corrupted or swapped
-        njopLandPerM2: (() => {
-          const savedPerM2 = report.valuationInput.njopLandPerM2;
-          const savedTotal = report.valuationInput.njopLand;
-          const area = report.valuationInput.landArea;
-
-          console.log('🔍 [NJOP DEBUG] Loading from database:', {
-            njopLandPerM2: savedPerM2,
-            njopLand: savedTotal,
-            landArea: area
-          });
-
-          // If we have a valid saved PerM2 value that makes sense, use it
-          if (savedPerM2 && savedPerM2 >= 10000) {
-            console.log('✅ [NJOP DEBUG] Using valid savedPerM2:', savedPerM2);
-            return savedPerM2;
-          }
-
-          // If no area, can't validate - return what we have or 0
-          if (!area || area === 0) {
-            console.log('⚠️ [NJOP DEBUG] No area, returning:', savedPerM2 || 0);
-            return savedPerM2 || 0;
-          }
-
-          // Calculate what PerM2 should be based on Total
-          const calculatedPerM2 = savedTotal && savedTotal > 0 ? Math.round(savedTotal / area) : 0;
-          console.log('🧮 [NJOP DEBUG] Calculated PerM2 from Total:', calculatedPerM2);
-
-          // Case 1: savedPerM2 is suspiciously low (< 10k) but savedTotal looks like a valid per-m2 price
-          if (savedPerM2 && savedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
-            // Data is likely swapped - use savedTotal as the per-m2 value
-            console.log('🔄 [NJOP DEBUG] SWAP DETECTED! Using savedTotal as PerM2:', savedTotal);
-            return savedTotal;
-          }
-
-          // Case 2: savedPerM2 doesn't exist or is 0, but we can calculate from Total
-          if (!savedPerM2 || savedPerM2 === 0) {
-            // If calculated is too low but Total looks valid, assume Total is actually PerM2
-            if (calculatedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
-              console.log('🔄 [NJOP DEBUG] Calculated too low, using savedTotal:', savedTotal);
-              return savedTotal;
-            }
-            console.log('📊 [NJOP DEBUG] Using calculated PerM2:', calculatedPerM2);
-            return calculatedPerM2;
-          }
-
-          // Default: use the saved value
-          console.log('📋 [NJOP DEBUG] Using default savedPerM2:', savedPerM2);
-          return savedPerM2;
-        })(),
-
-        // Same heuristic for building
-        njopBuildingPerM2: (() => {
-          const savedPerM2 = report.valuationInput.njopBuildingPerM2;
-          const savedTotal = report.valuationInput.njopBuilding;
-          const area = report.valuationInput.buildingArea;
-
-          if (savedPerM2 && savedPerM2 >= 10000) {
-            return savedPerM2;
-          }
-
-          if (!area || area === 0) {
-            return savedPerM2 || 0;
-          }
-
-          const calculatedPerM2 = savedTotal && savedTotal > 0 ? Math.round(savedTotal / area) : 0;
-
-          if (savedPerM2 && savedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
-            return savedTotal;
-          }
-
-          if (!savedPerM2 || savedPerM2 === 0) {
-            if (calculatedPerM2 < 10000 && savedTotal && savedTotal >= 10000) {
-              return savedTotal;
-            }
-            return calculatedPerM2;
-          }
-
-          return savedPerM2;
-        })(),
+        // FIX: Handle Firestore data where njopLandPerM2 is undefined
+        // If njopLand looks like a per-m2 value (>= 10k), use it as njopLandPerM2
+        njopLandPerM2: report.valuationInput.njopLandPerM2 ??
+          (report.valuationInput.njopLand && report.valuationInput.njopLand >= 10000
+            ? report.valuationInput.njopLand
+            : 0),
       },
       remarks: report.remarks,
     } as ReportInputPayload;
