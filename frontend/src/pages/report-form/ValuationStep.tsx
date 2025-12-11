@@ -24,7 +24,7 @@ const parseFormattedNumber = (value: string): number => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-// Currency input component - MOVED OUTSIDE to prevent recreation
+// Currency input component with validation
 const CurrencyInput = ({
   label,
   value,
@@ -32,7 +32,9 @@ const CurrencyInput = ({
   placeholder = "0",
   hint,
   disabled = false,
-  className = ""
+  className = "",
+  min,
+  max
 }: {
   label: string;
   value: number | undefined;
@@ -41,6 +43,8 @@ const CurrencyInput = ({
   hint?: string;
   disabled?: boolean;
   className?: string;
+  min?: number;
+  max?: number;
 }) => {
   const [localValue, setLocalValue] = useState(formatNumber(value));
   const isTypingRef = useRef(false);
@@ -79,6 +83,18 @@ const CurrencyInput = ({
     }, 500);
   };
 
+  // Check if value is invalid
+  const isInvalid = value !== undefined && value > 0 && (
+    (min !== undefined && value < min) ||
+    (max !== undefined && value > max)
+  );
+
+  const errorMessage = isInvalid
+    ? min !== undefined && value! < min
+      ? `Nilai minimum: ${formatNumber(min)}`
+      : `Nilai maksimum: ${formatNumber(max!)}`
+    : null;
+
   return (
     <div className={className}>
       <label className="text-sm font-medium text-slate-600">{label}</label>
@@ -86,11 +102,13 @@ const CurrencyInput = ({
         type="text"
         value={localValue}
         onChange={handleChange}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-right"
+        className={`mt-1 w-full rounded-md border px-3 py-2 text-sm text-right ${isInvalid ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-teal-500'
+          }`}
         placeholder={placeholder}
         disabled={disabled}
       />
-      {hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>}
+      {isInvalid && <p className="text-xs text-red-600 mt-1">{errorMessage}</p>}
+      {!isInvalid && hint && <p className="text-xs text-slate-500 mt-1">{hint}</p>}
     </div>
   );
 };
@@ -277,11 +295,17 @@ export function ValuationStep({
                   label="NJOP Tanah (Rp/m²)"
                   value={formData.valuationInput.njopLandPerM2}
                   onChange={(v) => onUpdateValuationInput("njopLandPerM2", v)}
+                  min={1000}
+                  max={100000000}
+                  hint="Nilai NJOP tanah per meter persegi"
                 />
                 <CurrencyInput
                   label="NJOP Bangunan (Rp/m²)"
                   value={formData.valuationInput.njopBuildingPerM2}
                   onChange={(v) => onUpdateValuationInput("njopBuildingPerM2", v)}
+                  min={1000}
+                  max={100000000}
+                  hint="Nilai NJOP bangunan per meter persegi"
                 />
               </>
             )}
