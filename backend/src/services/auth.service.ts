@@ -27,7 +27,7 @@ export class AuthService {
 
     const user = await db.findUserByUsername(username);
     if (!user) {
-      throw new AuthenticationError("Invalid username or password");
+      throw new AuthenticationError("Username atau password tidak valid.");
     }
 
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);

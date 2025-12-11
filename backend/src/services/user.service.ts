@@ -143,7 +143,7 @@ class UserService {
     const updatedUser = updatedUsers.find((u) => u.id === userId);
 
     if (!updatedUser) {
-      throw new NotFoundError("User not found after update");
+      throw new NotFoundError("Pengguna tidak ditemukan setelah pembaruan.");
     }
 
     return sanitizeUser(updatedUser);

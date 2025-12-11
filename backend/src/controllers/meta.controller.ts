@@ -67,7 +67,7 @@ export async function metadataController(_req: Request, res: Response) {
 export async function updateSettingsController(req: AuthenticatedRequest, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Tidak memiliki otorisasi." });
     }
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Hanya admin yang dapat memperbarui pengaturan." });
