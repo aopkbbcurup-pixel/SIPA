@@ -7,7 +7,9 @@ import { env } from "./config/env";
 // We can force this here or rely on env vars.
 // Ideally, env vars should be set in Firebase Config.
 
-let app: admin.app.App | undefined;
+import type { Application } from "express";
+
+let app: Application | undefined;
 
 export const api = functions.https.onRequest(async (req, res) => {
     if (!app) {
