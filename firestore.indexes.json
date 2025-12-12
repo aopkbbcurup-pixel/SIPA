@@ -1,0 +1,82 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "reports",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "reports",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "assignedAppraiserId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "reports",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "assignedAppraiserId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "reports",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "updatedAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": [
+        {
+            "collectionGroup": "reports",
+            "fieldPath": "generalInfo.reportNumber",
+            "indexes": [
+                {
+                    "order": "ASCENDING",
+                    "queryScope": "COLLECTION"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "reports",
+            "fieldPath": "generalInfo.customerName",
+            "indexes": [
+                {
+                    "order": "ASCENDING",
+                    "queryScope": "COLLECTION"
+                }
+            ]
+        }
+    ]
+}

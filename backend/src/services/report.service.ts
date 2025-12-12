@@ -894,6 +894,13 @@ export class ReportService {
     const collateral = normaliseCollateral(input.collateral);
     const comparables = normaliseComparables(input.comparables);
     const comparableAnalysis = computeComparableAnalysis(comparables);
+
+    // Validate valuation input
+    const validationErrors = validateValuationInput(valuationInput);
+    if (validationErrors.length > 0) {
+      throw new Error(validationErrors.join('; '));
+    }
+
     const valuationResult = {
       ...calculateValuation(valuationInput),
       comparablesAnalysis: comparableAnalysis,
