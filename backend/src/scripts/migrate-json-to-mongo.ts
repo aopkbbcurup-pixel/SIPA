@@ -61,7 +61,7 @@ async function migrate() {
             try {
                 await ReportModel.create(report);
                 console.log(`Migrated report: ${report.generalInfo.reportNumber}`);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error(`Failed to migrate report ${report.id}:`, JSON.stringify(err, null, 2));
             }
         } else {

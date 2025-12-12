@@ -171,7 +171,7 @@ export class FirestoreDatabase implements IDatabase {
         }
 
         const now = new Date().toISOString();
-        const updates: any = {
+        const updates: Record<string, unknown> = {
             status,
             updatedAt: now,
             ...metadata,
