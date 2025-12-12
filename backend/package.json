@@ -18,7 +18,7 @@
     "fix-njop:prod": "node dist/scripts/fix-njop-values.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Izhan Project (2025)",
   "license": "ISC",
   "type": "commonjs",
   "pkg": {

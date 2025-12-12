@@ -118,8 +118,8 @@ export function LoginPage() {
             <p className="mt-2 text-center text-[10px] text-slate-500">Password: password123</p>
           </div>
         </div>
-        <p className="mt-8 text-center text-xs text-slate-500">
-          &copy; {new Date().getFullYear()} Bank Bengkulu. All rights reserved.
+        <p className="mt-8 text-center text-xs text-slate-400">
+          © 2025. <span className="font-semibold text-slate-300">Izhan Project</span> | Bank Bengkulu
         </p>
       </div>
     </div>

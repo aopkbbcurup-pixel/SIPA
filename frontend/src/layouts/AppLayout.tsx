@@ -120,6 +120,13 @@ export function AppLayout() {
         <main className="mx-auto max-w-7xl px-6 py-8 animate-in fade-in duration-500">
           <Outlet />
         </main>
+        <footer className="border-t border-slate-200 bg-white py-4 mt-8">
+          <div className="mx-auto max-w-7xl px-6">
+            <p className="text-center text-xs text-slate-500">
+              © 2025. <span className="font-semibold text-slate-700">Izhan Project</span> - All rights reserved
+            </p>
+          </div>
+        </footer>
         <Notifications />
         <Chatbox />
       </div>
