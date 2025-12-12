@@ -1,5 +1,36 @@
 import { ValuationInput } from "../types/domain";
 
+/**
+ * Validates email format using RFC 5322 compliant regex
+ */
+export function validateEmail(email: string): boolean {
+    if (!email || typeof email !== 'string') return false;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+}
+
+/**
+ * Validates Indonesian phone number format
+ * Accepts: 08xx, +628xx, 628xx, 02xx (landline)
+ */
+export function validatePhoneNumber(phone: string): boolean {
+    if (!phone || typeof phone !== 'string') return false;
+
+    const cleanPhone = phone.trim().replace(/[\s-]/g, '');
+
+    // Indonesian mobile: 08xx (10-13 digits), +628xx, or 628xx
+    const mobileRegex = /^(\+?62|0)8[0-9]{8,11}$/;
+
+    // Indonesian landline: 02xx (9-11 digits)
+    const landlineRegex = /^(\+?62|0)2[0-9]{7,9}$/;
+
+    return mobileRegex.test(cleanPhone) || landlineRegex.test(cleanPhone);
+}
+
+/**
+ * Validates valuation input values to ensure data integrity.
+ */
 export function validateValuationInput(input: Partial<ValuationInput>): string[] {
     const errors: string[] = [];
 

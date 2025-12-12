@@ -140,8 +140,8 @@ export function ReportsPage() {
           <button
             onClick={() => setActiveTab("reports")}
             className={`whitespace-nowrap border-b-2 px-1 pb-4 text-sm font-medium transition-colors ${activeTab === "reports"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
               }`}
           >
             Daftar Laporan
@@ -149,8 +149,8 @@ export function ReportsPage() {
           <button
             onClick={() => setActiveTab("analytics")}
             className={`whitespace-nowrap border-b-2 px-1 pb-4 text-sm font-medium transition-colors ${activeTab === "analytics"
-                ? "border-indigo-600 text-indigo-600"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
               }`}
           >
             Analytics Dashboard
@@ -440,3 +440,5 @@ export function ReportsPage() {
     </div>
   );
 }
+
+export default ReportsPage;
