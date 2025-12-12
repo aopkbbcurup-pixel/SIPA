@@ -628,6 +628,49 @@ function normaliseComparables(items: ComparableInput[]): MarketComparable[] {
   });
 }
 
+/**
+ * Calculates comprehensive property valuation based on input parameters.
+ * 
+ * This function performs the core valuation calculation for both land-only
+ * properties and properties with buildings. It applies safety margins,
+ * calculates liquidation values, and computes market values based on
+ * various input parameters.
+ * 
+ * @param input - Valuation input containing all necessary parameters:
+ *   - landArea, buildingArea: Property dimensions in m²
+ *   - landRate, buildingRate: Per-square-meter rates
+ *   - njopLand, njopBuilding: NJOP values for averaging
+ *   - safetyMarginPercent: Safety deduction percentage
+ *   - liquidationFactorPercent: Liquidation value percentage
+ * 
+ * @returns ValuationResult containing:
+ *   - land: Component result for land
+ *   - building: Component result for building (if applicable)
+ *   - marketValue: Total market value
+ *   - collateralValue: Value after safety margin
+ *   - liquidationValue: Forced sale value
+ *   - totalSafetyDeduction: Total deducted for safety
+ * 
+ * Calculation Logic:
+ * 1. Land-Only: landArea * landRate
+ * 2. Building: Uses buildingStandardRate (before depreciation)
+ * 3. Safety margin applied to building only
+ * 4. Liquidation factor applied to both after safety
+ * 5. Average values computed with NJOP when available
+ * 
+ * @example
+ * ```typescript
+ * const result = calculateValuation({
+ *   landArea: 100,
+ *   landRate: 2000000,
+ *   buildingArea: 80,
+ *   buildingStandardRate: 3000000,
+ *   safetyMarginPercent: 10,
+ *   liquidationFactorPercent: 80
+ * });
+ * // Result includes market value, collateral value, liquidation value
+ * ```
+ */
 function calculateValuation(input: ValuationInput): ValuationResult {
   // Logic for Vehicle and Machine/Heavy Equipment
   if (input.assetType === "vehicle" || input.assetType === "machine") {

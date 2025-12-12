@@ -25,6 +25,37 @@ export class AiService {
 Demikian laporan penilaian ini dibuat untuk digunakan sebagaimana mestinya.`;
     }
 
+
+    /**
+     * Predicts property price using Automated Valuation Model (AVM).
+     * 
+     * Uses NJOP as primary baseline with conservative market multipliers.
+     * Falls back to location-based estimates if NJOP unavailable.
+     * Results are deterministic based on report ID for consistency.
+     * 
+     * @param report - Partial report with valuation input and property details
+     * @returns Price prediction with min/max range and confidence score
+     * 
+     * Algorithm:
+     * 1. Uses NJOP as baseline (0.8-1.3x for land, 0.9-1.2x for building)
+     * 2. Applies location adjustments (Jakarta +15%, Desa -10%)
+     * 3. Applies condition adjustments (Mewah +10%, Rusak -15%)
+     * 4. Returns ±5% range around estimate
+     * 5. Confidence higher with NJOP data (0.5-0.9)
+     * 
+     * @example
+     * ```typescript
+     * const prediction = await aiService.predictPropertyPrice({
+     *   valuationInput: {
+     *     njopLandPerM2: 500000,
+     *     landArea: 100,
+     *     njopBuildingPerM2: 800000,
+     *     buildingArea: 80
+     *   }
+     * });
+     * // Returns: { min: 120000000, max: 132000000, confidence: 0.9 }
+     * ```
+     */
     async predictPropertyPrice(report: Partial<Report>): Promise<{ min: number; max: number; confidence: number }> {
         // Simulate AI processing delay
         await new Promise((resolve) => setTimeout(resolve, 1500));
