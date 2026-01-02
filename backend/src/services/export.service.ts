@@ -44,13 +44,13 @@ export async function exportReportsToExcel(reports: Report[]): Promise<Buffer> {
             reportNumber: report.generalInfo.reportNumber,
             reportDate: report.generalInfo.reportDate || '',
             customerName: report.generalInfo.customerName,
-            address: report.location?.address || '',
+            address: report.collateral[0]?.address || '',
             landArea: report.valuationInput.landArea,
             buildingArea: report.valuationInput.buildingArea || 0,
             marketValue: report.valuationResult?.marketValue || 0,
             liquidationValue: report.valuationResult?.liquidationValue || 0,
             status: getStatusLabel(report.status),
-            appraiser: report.createdBy || '',
+            appraiser: report.assignedAppraiserId || '',
         });
     });
 
@@ -92,13 +92,13 @@ export async function exportReportsToCSV(reports: Report[]): Promise<string> {
         report.generalInfo.reportNumber,
         report.generalInfo.reportDate || '',
         report.generalInfo.customerName,
-        report.location?.address || '',
+        report.collateral[0]?.address || '',
         report.valuationInput.landArea,
         report.valuationInput.buildingArea || 0,
         report.valuationResult?.marketValue || 0,
         report.valuationResult?.liquidationValue || 0,
         getStatusLabel(report.status),
-        report.createdBy || '',
+        report.assignedAppraiserId || '',
     ]);
 
     // Build CSV

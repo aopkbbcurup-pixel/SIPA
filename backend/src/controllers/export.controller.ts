@@ -11,11 +11,11 @@ export async function exportReportsExcel(req: Request, res: Response) {
         const { status, from, to } = req.query;
 
         // Fetch reports with filters
-        const reports = await db.getAllReports({
+        const reports = await db.getReports({
             status: status as string,
             from: from as string,
             to: to as string,
-        });
+        } as any);
 
         // Generate Excel
         const buffer = await exportReportsToExcel(reports);
@@ -39,11 +39,11 @@ export async function exportReportsCSV(req: Request, res: Response) {
         const { status, from, to } = req.query;
 
         // Fetch reports with filters
-        const reports = await db.getAllReports({
+        const reports = await db.getReports({
             status: status as string,
             from: from as string,
             to: to as string,
-        });
+        } as any);
 
         // Generate CSV
         const csv = await exportReportsToCSV(reports);
@@ -65,22 +65,22 @@ export async function exportReportsCSV(req: Request, res: Response) {
 export async function exportAnalytics(req: Request, res: Response) {
     try {
         // Get analytics data
-        const reports = await db.getAllReports({});
+        const reports = await db.getReports({});
 
         const analytics = {
             totalReports: reports.length,
-            byStatus: reports.reduce((acc, r) => {
+            byStatus: reports.reduce((acc: Record<string, number>, r: Report) => {
                 acc[r.status] = (acc[r.status] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>),
-            byAppraiser: reports.reduce((acc, r) => {
-                const appraiser = r.createdBy || 'Unknown';
+            byAppraiser: reports.reduce((acc: Record<string, number>, r: Report) => {
+                const appraiser = r.assignedAppraiserId || 'Unknown';
                 acc[appraiser] = (acc[appraiser] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>),
-            totalValue: reports.reduce((sum, r) => sum + (r.valuationResult?.marketValue || 0), 0),
+            totalValue: reports.reduce((sum: number, r: Report) => sum + (r.valuationResult?.marketValue || 0), 0),
             averageValue: reports.length > 0
-                ? reports.reduce((sum, r) => sum + (r.valuationResult?.marketValue || 0), 0) / reports.length
+                ? reports.reduce((sum: number, r: Report) => sum + (r.valuationResult?.marketValue || 0), 0) / reports.length
                 : 0,
         };
 

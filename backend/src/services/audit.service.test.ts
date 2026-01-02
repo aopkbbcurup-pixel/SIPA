@@ -92,7 +92,7 @@ describe('Audit Service', () => {
             const report: Partial<Report> = {
                 id: 'report-456',
                 status: 'approved',
-                createdBy: 'User 1',
+                assignedAppraiserId: 'User 1',
                 createdAt: '2024-01-01T00:00:00Z',
                 auditTrail: [
                     createAuditEntry('user-1', 'User 1', 'report_created', { reportId: 'report-456' }),
@@ -121,7 +121,7 @@ describe('Audit Service', () => {
             const report: Partial<Report> = {
                 id: 'report-456',
                 status: 'draft',
-                createdBy: 'User 1',
+                assignedAppraiserId: 'User 1',
                 createdAt: '2024-01-01T00:00:00Z',
                 auditTrail: [],
             };

@@ -186,17 +186,17 @@ describe('validateValuationInput', () => {
 
         it('should handle undefined values', () => {
             const errors = validateValuationInput({
-                njopLandPerM2: undefined,
-                landArea: undefined,
-            });
+                njopLandPerM2: undefined as unknown as number,
+                landArea: undefined as unknown as number,
+            } as any);
             expect(errors).toEqual([]);
         });
 
         it('should handle null values', () => {
             const errors = validateValuationInput({
-                njopLandPerM2: null,
-                landArea: null,
-            });
+                njopLandPerM2: null as unknown as number,
+                landArea: null as unknown as number,
+            } as any);
             expect(errors).toEqual([]);
         });
 

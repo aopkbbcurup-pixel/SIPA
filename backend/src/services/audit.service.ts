@@ -79,29 +79,58 @@ export function getAuditSummary(report: Report): {
 } {
     const auditTrail = report.auditTrail || [];
 
+    // Filter status changes - only check actions that exist in AuditAction type
     const statusChanges = auditTrail.filter(
         entry => entry.action === 'status_changed' ||
-            entry.action === 'report_submitted' ||
-            entry.action === 'report_approved' ||
-            entry.action === 'report_rejected'
+            entry.action === 'report_updated'
     );
 
-    const statusHistory = statusChanges.map(entry => ({
-        status: (entry.details.statusTo || report.status) as ReportStatus,
-        changedBy: entry.userName,
-        changedAt: entry.timestamp,
-        reason: entry.details.reason,
-    }));
+    const statusHistory: Array<{
+        status: ReportStatus;
+        changedBy: string;
+        changedAt: string;
+        reason?: string;
+    }> = statusChanges.map(entry => {
+        const meta = entry.metadata as Record<string, unknown> | undefined;
+        const reasonValue = meta?.reason as string | undefined;
+        const result: {
+            status: ReportStatus;
+            changedBy: string;
+            changedAt: string;
+            reason?: string;
+        } = {
+            status: (meta?.statusTo || report.status) as ReportStatus,
+            changedBy: entry.actorId,
+            changedAt: entry.timestamp,
+        };
+        if (reasonValue) {
+            result.reason = reasonValue;
+        }
+        return result;
+    });
 
     const lastUpdate = auditTrail[auditTrail.length - 1];
 
-    return {
-        createdBy: report.createdBy || 'System',
+    const baseResult: {
+        createdBy: string;
+        createdAt: string;
+        lastModifiedBy?: string;
+        lastModifiedAt?: string;
+        statusHistory: typeof statusHistory;
+    } = {
+        createdBy: report.assignedAppraiserId || 'System',
         createdAt: report.createdAt,
-        lastModifiedBy: lastUpdate?.userName,
-        lastModifiedAt: lastUpdate?.timestamp,
         statusHistory,
     };
+
+    if (lastUpdate?.actorId) {
+        baseResult.lastModifiedBy = lastUpdate.actorId;
+    }
+    if (lastUpdate?.timestamp) {
+        baseResult.lastModifiedAt = lastUpdate.timestamp;
+    }
+
+    return baseResult;
 }
 
 /**
