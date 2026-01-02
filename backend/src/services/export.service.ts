@@ -96,7 +96,7 @@ export async function exportReportsToCSV(reports: Report[]): Promise<string> {
         report.valuationInput.landArea,
         report.valuationInput.buildingArea || 0,
         report.valuationResult?.marketValue || 0,
-        report.valuationResult?.liquid ationValue || 0,
+        report.valuationResult?.liquidationValue || 0,
         getStatusLabel(report.status),
         report.createdBy || '',
     ]);

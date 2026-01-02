@@ -157,6 +157,7 @@ export function ReportDetailPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [verificationBusy, setVerificationBusy] = useState<string | null>(null);
   const [remarksExpanded, setRemarksExpanded] = useState(false);
+  const [auditExpanded, setAuditExpanded] = useState(false);
   const [gisComparables, setGisComparables] = useState<any[]>([]);
   const [gisLoading, setGisLoading] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
@@ -1787,27 +1788,38 @@ export function ReportDetailPage() {
                     {auditEntries.length === 0 ? (
                       <p className="mt-3 text-sm text-slate-500">Belum ada riwayat aktivitas.</p>
                     ) : (
-                      <ul className="mt-4 space-y-3 text-sm text-slate-700">
-                        {auditEntries.map((entry) => (
-                          <li key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div className="font-semibold text-slate-800">{entry.description}</div>
-                              <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                {entry.actorRole}
-                              </span>
-                            </div>
-                            <div className="mt-1 text-xs text-slate-500">{formatDate(entry.timestamp, true)}</div>
-                            {entry.metadata && Object.keys(entry.metadata).length > 0 ? (
-                              <div className="mt-2 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                                <p className="font-semibold text-slate-700">Detail</p>
-                                <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-[11px]">
-                                  {JSON.stringify(entry.metadata, null, 2)}
-                                </pre>
-                              </div>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="mt-4">
+                        <button
+                          type="button"
+                          onClick={() => setAuditExpanded((current) => !current)}
+                          className="text-sm font-medium text-primary hover:text-primary-dark"
+                        >
+                          {auditExpanded ? "Sembunyikan catatan" : `Tampilkan catatan (${auditEntries.length})`}
+                        </button>
+                        {auditExpanded && (
+                          <ul className="mt-3 space-y-3 text-sm text-slate-700">
+                            {auditEntries.map((entry) => (
+                              <li key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="font-semibold text-slate-800">{entry.description}</div>
+                                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    {entry.actorRole}
+                                  </span>
+                                </div>
+                                <div className="mt-1 text-xs text-slate-500">{formatDate(entry.timestamp, true)}</div>
+                                {entry.metadata && Object.keys(entry.metadata).length > 0 ? (
+                                  <div className="mt-2 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                                    <p className="font-semibold text-slate-700">Detail</p>
+                                    <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-[11px]">
+                                      {JSON.stringify(entry.metadata, null, 2)}
+                                    </pre>
+                                  </div>
+                                ) : null}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     )}
                   </section>
                 </div>
